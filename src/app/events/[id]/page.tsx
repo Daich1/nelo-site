@@ -1,92 +1,63 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type GFile = { id: string; name: string };
 
-export default function EventAlbumPage() {
+export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: session } = useSession();
-  const role = (session?.user as any)?.role || "Guest";
+  const [preview, setPreview] = useState<GFile[]>([]);
 
-  const [files, setFiles] = useState<GFile[]>([]);
-  const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  async function refresh() {
-    const res = await fetch(`/api/drive/list?eventId=${id}`);
-    const data = await res.json();
-    setFiles(data.files || []);
-  }
+  // 仮のイベント情報（後でDB化）
+  const event = {
+    id,
+    title: "夏合宿",
+    date: "2025-08-09",
+    place: "熱海",
+    description: "チーム合宿でBBQと観光！",
+  };
 
   useEffect(() => {
-    refresh();
-  }, [id]);
-
-  if (role === "Guest") {
-    return <p className="p-6">このアルバムは非公開です。ログインしてください。</p>;
-  }
-
-  const canUpload = role === "Admin" || role === "Nelo";
-
-  async function onUploadSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setLoading(true);
-    try {
-      const form = new FormData();
-      form.append("eventId", String(id));
-      form.append("title", ""); // 任意：初回フォルダ作成時のタイトル
-      Array.from(files).forEach((f) => form.append("files", f));
-
-      const res = await fetch("/api/drive/upload", { method: "POST", body: form });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || "アップロードに失敗しました");
-      } else {
-        await refresh();
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      }
-    } finally {
-      setLoading(false);
+    async function fetchPreview() {
+      const res = await fetch(`/api/drive/list?eventId=${id}`);
+      const data = await res.json();
+      setPreview(((data.files ?? []) as GFile[]).slice(0, 3));
     }
-  }
+    void fetchPreview();
+  }, [id]);
 
   return (
     <main className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">アルバム - イベント {id}</h1>
-        {canUpload && (
-          <div className="flex items-center gap-3">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={onUploadSelected}
-              disabled={loading}
-            />
+      <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
+      <p className="text-gray-600">
+        {event.date} / {event.place}
+      </p>
+      <p className="mt-4">{event.description}</p>
+
+      <section className="mt-6">
+        <h2 className="text-xl font-semibold mb-3">アルバムプレビュー</h2>
+        {preview.length === 0 ? (
+          <p className="text-gray-500">まだ写真がありません</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {preview.map((f) => (
+              <img
+                key={f.id}
+                src={`/api/drive/file/${f.id}`}
+                alt={f.name}
+                className="w-full h-32 object-cover rounded"
+              />
+            ))}
           </div>
         )}
-      </div>
-
-      {loading && <p className="text-sm text-gray-500 mb-2">アップロード中...</p>}
-
-      {files.length === 0 ? (
-        <p className="text-gray-500">写真がまだありません</p>
-      ) : (
-        <div className="grid grid-cols-4 gap-2">
-          {files.map((f) => (
-            <img
-              key={f.id}
-              src={`/api/drive/file/${f.id}`}
-              alt={f.name}
-              className="w-full h-40 object-cover rounded"
-            />
-          ))}
-        </div>
-      )}
+        <Link
+          href={`/events/${id}/album`}
+          className="inline-block mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          アルバムをもっと見る
+        </Link>
+      </section>
     </main>
   );
 }

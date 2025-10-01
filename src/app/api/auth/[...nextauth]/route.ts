@@ -12,11 +12,17 @@ const handler = NextAuth({
   callbacks: {
     async session({ session, token }) {
       if (session.user) {
-        const userId = token.sub!; // Discordの一意ID
-        (session.user as any).id = userId;
+        const userId = token.sub ?? ""; // DiscordのSnowflake
+        const role = roles[userId] ?? "Guest";
 
-        // roles.ts からロールを参照、なければ Guest
-        (session.user as any).role = roles[userId] || "Guest";
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: userId,
+            role,
+          },
+        };
       }
       return session;
     },

@@ -1,30 +1,39 @@
-import { NextRequest } from "next/server";
-import { getDrive } from "@/lib/googleDrive";
+import { google } from "googleapis";
+import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "nodejs";
+const auth = new google.auth.GoogleAuth({
+  credentials: {
+    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  },
+  scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+});
+
+const drive = google.drive({ version: "v3", auth });
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const drive = getDrive();
   const fileId = params.id;
 
-  const res = await drive.files.get(
-    { fileId, alt: "media" },
-    { responseType: "arraybuffer" }
-  );
+  try {
+    const response = await drive.files.get(
+      { fileId, alt: "media" },
+      { responseType: "arraybuffer" }
+    );
 
-  const meta = await drive.files.get({
-    fileId,
-    fields: "name,mimeType",
-  });
+    const buffer = Buffer.from(response.data as ArrayBuffer);
 
-  return new Response(Buffer.from(res.data as ArrayBuffer), {
-    headers: {
-      "Content-Type": meta.data.mimeType || "application/octet-stream",
-      "Content-Disposition": `inline; filename="${meta.data.name}"`,
-      "Cache-Control": "public, max-age=86400",
-    },
-  });
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": "image/jpeg", // 実際はPNGなどもあるので後で動的判定可能
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  } catch (e: unknown) {
+    const message =
+      e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

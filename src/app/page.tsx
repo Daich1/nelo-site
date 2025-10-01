@@ -9,7 +9,9 @@ export default function Home() {
       <h1 className="text-2xl font-bold mb-4">Nelo Hub</h1>
 
       {session ? (
-        <p>ようこそ、{session.user?.name} さん（権限: {(session.user as any).role}）</p>
+        <p>
+          ようこそ、{session.user?.name} さん（権限: {session.user.role}）
+        </p>
       ) : (
         <p>ログインしてください</p>
       )}

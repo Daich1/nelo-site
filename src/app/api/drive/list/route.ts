@@ -35,7 +35,10 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ files: list.data.files || [] });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
-  }
+} catch (e: unknown) {
+  const message =
+    e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";
+  return NextResponse.json({ error: message }, { status: 500 });
+}
+
 }
