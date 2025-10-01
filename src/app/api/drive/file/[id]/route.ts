@@ -1,39 +1,34 @@
-import { google } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
-
-const auth = new google.auth.GoogleAuth({
-  credentials: {
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-  },
-  scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-});
-
-const drive = google.drive({ version: "v3", auth });
+import { getDrive } from "@/lib/googleDrive";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const fileId = params.id;
+  const { id } = context.params;
 
   try {
-    const response = await drive.files.get(
-      { fileId, alt: "media" },
-      { responseType: "arraybuffer" }
+    const drive = getDrive();
+
+    // Google Drive から画像データを取得
+    const res = await drive.files.get(
+      { fileId: id, alt: "media" }, // alt=media → ファイル本体
+      { responseType: "stream" }
     );
 
-    const buffer = Buffer.from(response.data as ArrayBuffer);
-
-    return new NextResponse(buffer, {
+    // ストリームをそのまま返す
+    return new Response(res.data as any, {
       headers: {
-        "Content-Type": "image/jpeg", // 実際はPNGなどもあるので後で動的判定可能
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Content-Type":
+          (res.headers["content-type"] as string) || "application/octet-stream",
+        "Cache-Control": "public, max-age=3600", // キャッシュ1時間
       },
     });
-  } catch (e: unknown) {
-    const message =
-      e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (err: any) {
+    console.error("Drive fetch error", err.message);
+    return NextResponse.json(
+      { error: "Failed to fetch image from Drive", details: err.message },
+      { status: 500 }
+    );
   }
 }
