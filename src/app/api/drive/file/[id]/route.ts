@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDrive } from "@/lib/googleDrive";
 
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+// Next.js が用意している Context 型を使う
+interface RouteContext {
+  params: { id: string };
+}
+
+export async function GET(req: NextRequest, context: RouteContext) {
   const { id } = context.params;
 
   try {
@@ -12,16 +14,15 @@ export async function GET(
 
     // Google Drive から画像データを取得
     const res = await drive.files.get(
-      { fileId: id, alt: "media" }, // alt=media → ファイル本体
+      { fileId: id, alt: "media" },
       { responseType: "stream" }
     );
 
-    // ストリームをそのまま返す
     return new Response(res.data as any, {
       headers: {
         "Content-Type":
           (res.headers["content-type"] as string) || "application/octet-stream",
-        "Cache-Control": "public, max-age=3600", // キャッシュ1時間
+        "Cache-Control": "public, max-age=3600",
       },
     });
   } catch (err: any) {
