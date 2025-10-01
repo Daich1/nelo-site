@@ -1,63 +1,73 @@
 "use client";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { useEffect, useState } from "react";
 
-type GFile = { id: string; name: string };
+import { useParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import type { DriveFile } from "@/types/drive";
+
+type EventData = {
+  id: string;
+  title: string;
+  date: string;
+  place: string;
+  description?: string;
+};
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [preview, setPreview] = useState<GFile[]>([]);
+  const [preview, setPreview] = useState<DriveFile[]>([]);
 
-  // 仮のイベント情報（後でDB化）
-  const event = {
-    id,
+  const refresh = useCallback(async () => {
+    const res = await fetch(`/api/drive/list?eventId=${id}&pageSize=3`);
+    if (!res.ok) return;
+    const data: { files: DriveFile[] } = await res.json();
+    setPreview(data.files);
+  }, [id]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]); // ✅ 依存に refresh を含める
+
+  // 仮のイベント情報（DB接続に置換OK）
+  const event: EventData = {
+    id: String(id),
     title: "夏合宿",
     date: "2025-08-09",
     place: "熱海",
     description: "チーム合宿でBBQと観光！",
   };
 
-  useEffect(() => {
-    async function fetchPreview() {
-      const res = await fetch(`/api/drive/list?eventId=${id}`);
-      const data = await res.json();
-      setPreview(((data.files ?? []) as GFile[]).slice(0, 3));
-    }
-    void fetchPreview();
-  }, [id]);
-
   return (
     <main className="p-6">
       <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
-      <p className="text-gray-600">
+      <p className="text-sm text-gray-500 mb-6">
         {event.date} / {event.place}
       </p>
-      <p className="mt-4">{event.description}</p>
 
-      <section className="mt-6">
-        <h2 className="text-xl font-semibold mb-3">アルバムプレビュー</h2>
-        {preview.length === 0 ? (
-          <p className="text-gray-500">まだ写真がありません</p>
-        ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {preview.map((f) => (
-              <img
-                key={f.id}
-                src={`/api/drive/file/${f.id}`}
+      <section className="mb-6">
+        <h2 className="font-semibold mb-2">プレビュー（最新3件）</h2>
+        <div className="flex gap-3">
+          {preview.map((f) => (
+            <div key={f.id} className="relative w-40 h-40 rounded-xl overflow-hidden">
+              <Image
+                src={`/api/drive/thumbnail?id=${f.id}`}
                 alt={f.name}
-                className="w-full h-32 object-cover rounded"
+                fill
+                sizes="160px"
+                className="object-cover"
               />
-            ))}
-          </div>
-        )}
-        <Link
-          href={`/events/${id}/album`}
-          className="inline-block mt-4 bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          アルバムをもっと見る
-        </Link>
+            </div>
+          ))}
+        </div>
       </section>
+
+      <Link
+        href={`/events/${event.id}/album`}
+        className="inline-flex items-center px-4 py-2 rounded-xl bg-blue-600 text-white"
+      >
+        アルバムへ
+      </Link>
     </main>
   );
 }

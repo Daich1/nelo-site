@@ -1,30 +1,33 @@
-"use client";
-import { useSession } from "next-auth/react";
+import Link from "next/link";
 
-export default function Home() {
-  const { data: session } = useSession();
+type HomeStat = {
+  label: string;
+  value: number | string;
+};
+
+export default function HomePage() {
+  const stats: HomeStat[] = [
+    { label: "イベント数", value: 1 },
+    { label: "写真", value: "3+" },
+  ];
 
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Nelo Hub</h1>
+    <main className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Nelo 内部サイト</h1>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {stats.map((s) => (
+          <div key={s.label} className="rounded-2xl p-4 border">
+            <div className="text-sm text-gray-500">{s.label}</div>
+            <div className="text-2xl font-semibold">{s.value}</div>
+          </div>
+        ))}
+      </div>
 
-      {session ? (
-        <p>
-          ようこそ、{session.user?.name} さん（権限: {session.user.role}）
-        </p>
-      ) : (
-        <p>ログインしてください</p>
-      )}
-
-      <section className="mt-6">
-        <h2 className="text-xl font-semibold">お知らせ</h2>
-        <p>※ここに最新のお知らせを表示予定</p>
-      </section>
-
-      <section className="mt-6">
-        <h2 className="text-xl font-semibold">直近のイベント</h2>
-        <p>※ここに直近イベントを表示予定</p>
-      </section>
+      <div>
+        <Link href="/events" className="underline">
+          イベント一覧へ
+        </Link>
+      </div>
     </main>
   );
 }

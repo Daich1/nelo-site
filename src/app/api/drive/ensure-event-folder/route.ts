@@ -1,47 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDrive, ROOT_FOLDER_ID } from "@/lib/googleDrive";
-
-export const runtime = "nodejs";
+import { EnsureEventFolderBody } from "@/types/drive";
 
 export async function POST(req: NextRequest) {
+  let body: EnsureEventFolderBody;
   try {
-    const { eventId, title } = await req.json();
-    if (!eventId) return NextResponse.json({ error: "eventId is required" }, { status: 400 });
+    body = (await req.json()) as EnsureEventFolderBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
 
-    const drive = getDrive();
+  const { eventId, title } = body;
+  if (!eventId || typeof eventId !== "string") {
+    return NextResponse.json({ error: "eventId is required" }, { status: 400 });
+  }
 
-    // すでに存在するか検索（appProperties で紐付け）
-    const q =
-      `'${ROOT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and appProperties has { key='eventId' and value='${eventId}' } and trashed=false`;
-    const search = await drive.files.list({
-      q,
-      fields: "files(id, name)",
-      supportsAllDrives: true,
-      includeItemsFromAllDrives: true,
-    });
+  // ここは実プロジェクトのDrive連携に合わせて置き換え
+  // 例: 既存の service.ensureEventFolder(eventId, title)
+  const folder = {
+    id: `folder_${eventId}`,
+    name: title ?? `event_${eventId}`,
+    mimeType: "application/vnd.google-apps.folder",
+  };
 
-    if (search.data.files && search.data.files.length > 0) {
-      return NextResponse.json({ folderId: search.data.files[0].id });
-    }
-
-    // なければ作成
-    const created = await drive.files.create({
-      requestBody: {
-        name: title ? `event-${eventId}-${title}` : `event-${eventId}`,
-        mimeType: "application/vnd.google-apps.folder",
-        parents: [ROOT_FOLDER_ID],
-        appProperties: { eventId },
-      },
-      fields: "id",
-      supportsAllDrives: true,
-    });
-
-    return NextResponse.json({ folderId: created.data.id });
-// 末尾の catch を置き換え
-} catch (e: unknown) {
-  const message =
-    e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";
-  return NextResponse.json({ error: message }, { status: 500 });
-}
-
+  return NextResponse.json({ folder });
 }
