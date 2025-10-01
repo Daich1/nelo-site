@@ -1,9 +1,12 @@
+"use client";
+import AuthGuard from "@/components/AuthGuard";
+
 export default function Home() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#0d0d0d]">
-      <h1 className="text-5xl font-bold text-[#f0558b]">
-        Hello Nelo 🚀
-      </h1>
-    </main>
+    <AuthGuard>
+      <main className="min-h-screen flex items-center justify-center">
+        <h1 className="text-4xl font-bold">Hello Nelo 🚀</h1>
+      </main>
+    </AuthGuard>
   );
 }
