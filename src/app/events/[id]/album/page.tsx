@@ -29,7 +29,7 @@ export default function EventAlbumPage() {
         {files.map((f) => (
           <div key={f.id} className="relative aspect-square overflow-hidden rounded-xl">
             <Image
-              src={`/api/drive/thumbnail?id=${f.id}`}
+              src="/placeholder.svg"
               alt={f.name}
               fill
               sizes="(max-width: 768px) 50vw, 25vw"

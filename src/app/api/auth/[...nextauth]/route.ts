@@ -2,6 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
+import type { Account, Profile } from "next-auth";
 
 const authOptions: NextAuthOptions = {
   providers: [
@@ -11,7 +12,15 @@ const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }): Promise<JWT> {
+    async jwt({
+      token,
+      account,
+      profile,
+    }: {
+      token: JWT;
+      account?: Account | null;
+      profile?: Profile | null;
+    }): Promise<JWT> {
       if (account) {
         token.accessToken = account.access_token;
       }
@@ -20,7 +29,13 @@ const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    async session({ session, token }): Promise<Session> {
+    async session({
+      session,
+      token,
+    }: {
+      session: Session;
+      token: JWT;
+    }): Promise<Session> {
       if (session.user) {
         (session as Session & { accessToken?: string }).accessToken = token.accessToken as string;
       }

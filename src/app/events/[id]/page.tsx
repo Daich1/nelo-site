@@ -50,7 +50,7 @@ export default function EventDetailPage() {
           {preview.map((f) => (
             <div key={f.id} className="relative w-40 h-40 rounded-xl overflow-hidden">
               <Image
-                src={`/api/drive/thumbnail?id=${f.id}`}
+                src="/placeholder.svg"
                 alt={f.name}
                 fill
                 sizes="160px"

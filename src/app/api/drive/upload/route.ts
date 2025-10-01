@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "eventId is required" }, { status: 400 });
   }
 
-  // 仮のアップロード結果（Drive連携に置換）
   const uploaded: DriveFile = {
     id: `file_${Date.now()}`,
     name: file.name,

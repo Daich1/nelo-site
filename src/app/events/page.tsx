@@ -23,7 +23,7 @@ export default async function EventsPage() {
             <Link href={`/events/${ev.id}`} className="block rounded-2xl overflow-hidden shadow">
               <div className="relative aspect-[16/9]">
                 <Image
-                  src={ev.coverId ? `/api/drive/thumbnail?id=${ev.coverId}` : "/placeholder.svg"}
+                  src="/placeholder.svg"
                   alt={ev.title}
                   fill
                   sizes="(max-width: 1024px) 100vw, 33vw"
