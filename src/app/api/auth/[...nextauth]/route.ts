@@ -1,7 +1,6 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
-import { Session } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import { roles } from "@/config/roles";
 
 const handler = NextAuth({
   providers: [
@@ -11,15 +10,13 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, token }: { session: Session; token: JWT }) {
+    async session({ session, token }) {
       if (session.user) {
-        return {
-          ...session,
-          user: {
-            ...session.user,
-            id: token.sub!,
-          },
-        };
+        const userId = token.sub!; // Discordの一意ID
+        (session.user as any).id = userId;
+
+        // roles.ts からロールを参照、なければ Guest
+        (session.user as any).role = roles[userId] || "Guest";
       }
       return session;
     },
