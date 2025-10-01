@@ -27,9 +27,8 @@ export default function EventDetailPage() {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]); // ✅ 依存に refresh を含める
+  }, [refresh]);
 
-  // 仮のイベント情報（DB接続に置換OK）
   const event: EventData = {
     id: String(id),
     title: "夏合宿",

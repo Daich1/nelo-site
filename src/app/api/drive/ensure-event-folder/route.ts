@@ -14,8 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "eventId is required" }, { status: 400 });
   }
 
-  // ここは実プロジェクトのDrive連携に合わせて置き換え
-  // 例: 既存の service.ensureEventFolder(eventId, title)
+  // 仮のフォルダオブジェクト（Drive連携に置換）
   const folder = {
     id: `folder_${eventId}`,
     name: title ?? `event_${eventId}`,

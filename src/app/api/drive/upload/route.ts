@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DriveFile, UploadResult } from "@/types/drive";
 
-export const runtime = "edge"; // 既存方針に合わせて変更可
+export const runtime = "edge";
 
 export async function POST(req: NextRequest) {
   const contentType = req.headers.get("content-type") ?? "";
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "eventId is required" }, { status: 400 });
   }
 
-  // ここで Drive へアップロード（実装と置換）
+  // 仮のアップロード結果（Drive連携に置換）
   const uploaded: DriveFile = {
     id: `file_${Date.now()}`,
     name: file.name,

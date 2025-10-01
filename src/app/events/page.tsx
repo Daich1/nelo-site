@@ -6,11 +6,10 @@ type EventListItem = {
   title: string;
   date: string;
   place: string;
-  coverId?: string; // DriveFile id
+  coverId?: string;
 };
 
 export default async function EventsPage() {
-  // 仮データ（実データ取得処理に置換）
   const events: EventListItem[] = [
     { id: "20250809", title: "夏合宿", date: "2025-08-09", place: "熱海", coverId: "1" },
   ];

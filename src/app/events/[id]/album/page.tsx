@@ -28,7 +28,6 @@ export default function EventAlbumPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {files.map((f) => (
           <div key={f.id} className="relative aspect-square overflow-hidden rounded-xl">
-            {/* 実際のサムネURLに置き換え */}
             <Image
               src={`/api/drive/thumbnail?id=${f.id}`}
               alt={f.name}

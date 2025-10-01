@@ -1,8 +1,8 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { NextRequest } from "next/server";
+import type { JWT } from "next-auth/jwt";
+import type { Session } from "next-auth";
 
-// ★ callbacks の引数に any を使わない
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -11,8 +11,7 @@ const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }) {
-      // token/account/profile は型付き
+    async jwt({ token, account, profile }): Promise<JWT> {
       if (account) {
         token.accessToken = account.access_token;
       }
@@ -21,11 +20,9 @@ const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }): Promise<Session> {
       if (session.user) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error augment
-        session.accessToken = token.accessToken as string | undefined;
+        (session as Session & { accessToken?: string }).accessToken = token.accessToken as string;
       }
       return session;
     },
@@ -34,6 +31,3 @@ const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
-
-// 型を使う例（不要なら削除OK）
-export type AuthRequest = NextRequest;

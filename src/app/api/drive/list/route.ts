@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     pageSize: pageSizeRaw ? Number(pageSizeRaw) : undefined,
   };
 
-  // 実装に合わせて Drive から取得
+  // 仮データ
   const files: DriveFile[] = [
     { id: "1", name: "sample1.jpg", mimeType: "image/jpeg" },
     { id: "2", name: "sample2.jpg", mimeType: "image/jpeg" },
