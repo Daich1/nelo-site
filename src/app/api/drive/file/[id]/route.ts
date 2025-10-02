@@ -11,10 +11,7 @@ const auth = new google.auth.GoogleAuth({
 
 const drive = google.drive({ version: "v3", auth });
 
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, context: any) {
   const fileId = context.params.id;
 
   try {
@@ -27,7 +24,7 @@ export async function GET(
 
     return new NextResponse(buffer, {
       headers: {
-        "Content-Type": "image/jpeg", // TODO: 動的に判定したければ fields: "mimeType" を使う
+        "Content-Type": "image/jpeg",
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
