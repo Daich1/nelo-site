@@ -1,8 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true, // ← これでanyでも落ちない
-  },
-};
+import type { NextConfig } from "next";
 
-module.exports = nextConfig;
+
+const nextConfig: NextConfig = {
+images: {
+remotePatterns: [
+{ protocol: "https", hostname: "images.unsplash.com" },
+{ protocol: "https", hostname: "*.githubusercontent.com" }
+]
+},
+experimental: { serverActions: { allowedOrigins: ["*"] } }
+};
+export default nextConfig;
