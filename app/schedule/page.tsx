@@ -13,7 +13,7 @@ const months = Object.keys(byMonth).sort();
 
 return (
 <div className="space-y-6">
-<h1 className="text-2xl font-semibold">Annual Schedule</h1>
+<h1 className="text-2xl font-semibold">年間スケジュール</h1>
 <div className="space-y-6">
 {months.map(m => (
 <div key={m} className="card">

@@ -16,7 +16,7 @@ const months = Object.keys(byMonth).sort();
 
 return (
 <div className="space-y-6">
-<h1 className="text-2xl font-semibold">Events</h1>
+<h1 className="text-2xl font-semibold">イベント一覧</h1>
 <div className="space-y-8">
 {months.map(m => (
 <section key={m} className="space-y-3">

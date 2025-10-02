@@ -5,7 +5,7 @@ export default async function Announcements(){
 const items = await listAnnouncements();
 return (
 <div className="space-y-6">
-<h1 className="text-2xl font-semibold">Announcements</h1>
+<h1 className="text-2xl font-semibold">お知らせ</h1>
 <div className="space-y-4">
 {items.map(a => (
 <article key={a.id} className="card">

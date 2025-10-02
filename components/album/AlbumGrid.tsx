@@ -19,7 +19,7 @@ return (
 {!canView && (
 <div className="absolute inset-0 grid place-items-center">
 <div className="bg-black/50 text-white px-3 py-1 rounded-xl flex items-center gap-2 text-xs">
-<Lock size={14}/> Members only
+<Lock size={14}/> メンバー限定
 </div>
 </div>
 )}
