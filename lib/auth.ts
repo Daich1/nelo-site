@@ -1,7 +1,11 @@
-export type Role = "Admin"|"Nelo"|"Member"|"Guest";
+import { getServerSession } from "next-auth";
 
-
-export async function getCurrentUser(){
-const role: Role = process.env.N_ROLE as Role || "Guest";
-return { id: "u_demo", name: "Demo", role };
+export async function getCurrentUser() {
+  const session = await getServerSession();
+  return {
+    name: session?.user?.name || "ゲスト",
+    role: (session?.user as any)?.role || "Guest",
+    email: session?.user?.email || null,
+    id: (session?.user as any)?.id || null,
+  };
 }

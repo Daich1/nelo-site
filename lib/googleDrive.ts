@@ -1,27 +1,24 @@
 import { google } from "googleapis";
 
-export function getDrive() {
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
-  const scopes = [
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/drive.file",
-  ];
+const auth = new google.auth.GoogleAuth({
+  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY as string),
+  scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+});
 
-  if (!clientEmail || !privateKey) {
-    throw new Error("Google service account env vars are missing");
-  }
+const drive = google.drive({ version: "v3", auth });
 
-  // Vercel では改行が \n として保存されるので置換
-  const fixedKey = privateKey.replace(/\\n/g, "\n");
-
-  const jwt = new google.auth.JWT({
-    email: clientEmail,
-    key: fixedKey,
-    scopes,
+export async function listDriveImages(folderId: string) {
+  const res = await drive.files.list({
+    q: `'${folderId}' in parents and mimeType contains 'image/' and trashed = false`,
+    orderBy: "createdTime desc",
+    fields: "files(id, name)",
   });
 
-  return google.drive({ version: "v3", auth: jwt });
+  return (
+    res.data.files?.map((f) => ({
+      id: f.id!,
+      name: f.name!,
+      url: `https://drive.google.com/uc?id=${f.id}`,
+    })) || []
+  );
 }
-
-export const ROOT_FOLDER_ID = process.env.NELO_DRIVE_ROOT_FOLDER_ID!;

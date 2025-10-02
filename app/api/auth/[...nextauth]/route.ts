@@ -1,48 +1,25 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import type { JWT } from "next-auth/jwt";
-import type { Session } from "next-auth";
-import type { Account, Profile } from "next-auth";
+import NextAuth from "next-auth";
+import DiscordProvider from "next-auth/providers/discord";
 
-const authOptions: NextAuthOptions = {
+const handler = NextAuth({
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    DiscordProvider({
+      clientId: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
-    async jwt({
-      token,
-      account,
-      profile,
-    }: {
-      token: JWT;
-      account?: Account | null;
-      profile?: Profile | null;
-    }): Promise<JWT> {
-      if (account) {
-        token.accessToken = account.access_token;
-      }
-      if (profile && "email" in profile && typeof profile.email === "string") {
-        token.email = profile.email;
-      }
-      return token;
-    },
-    async session({
-      session,
-      token,
-    }: {
-      session: Session;
-      token: JWT;
-    }): Promise<Session> {
-      if (session.user) {
-        (session as Session & { accessToken?: string }).accessToken = token.accessToken as string;
+    async session({ session, token }) {
+      // Discord の user.id は token.sub に入る
+      if (token.sub === process.env.ADMIN_DISCORD_ID) {
+        (session.user as any).role = "Admin";
+      } else {
+        (session.user as any).role = "Guest";
       }
       return session;
     },
   },
-};
+  secret: process.env.NEXTAUTH_SECRET,
+});
 
-const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

@@ -6,16 +6,8 @@ export type Event = {
   type: "Practice" | "Trip" | "Match" | "Meetup";
   summary: string;
   description: string;
-  images: string[];
+  folderId: string; // Google Drive のフォルダID
 };
-
-const demoImages = [
-  "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb",
-  "https://images.unsplash.com/photo-1519681393784-d120267933ba",
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
-  "https://images.unsplash.com/photo-1520975593861-230c439cec33"
-];
 
 const EVENTS: Event[] = [
   {
@@ -25,8 +17,8 @@ const EVENTS: Event[] = [
     location: "Atami",
     type: "Trip",
     summary: "Seafood market, beach, fishing, sauna.",
-    description: "Group trip with seafood focus. Album is accessible from this page only.",
-    images: demoImages
+    description: "Group trip with seafood focus.",
+    folderId: "GOOGLE_DRIVE_FOLDER_ID_FOR_ATAMI"
   },
   {
     slug: "2025-osaka-offsite",
@@ -36,7 +28,7 @@ const EVENTS: Event[] = [
     type: "Meetup",
     summary: "Airbnb stay, hotpot dinner, market shopping.",
     description: "Planning and logistics, album embedded as per design.",
-    images: demoImages.slice().reverse()
+    folderId: "GOOGLE_DRIVE_FOLDER_ID_FOR_OSAKA"
   },
   {
     slug: "2025-scrim-nelos",
@@ -46,7 +38,7 @@ const EVENTS: Event[] = [
     type: "Match",
     summary: "Full-party practice and replay analysis.",
     description: "Practice scrim night. Replay feature notes.",
-    images: demoImages
+    folderId: "GOOGLE_DRIVE_FOLDER_ID_FOR_SCRIM"
   }
 ];
 
@@ -60,7 +52,7 @@ export async function getEventBySlug(slug: string) {
 
 export async function listAnnouncements() {
   return [
-    { id: "a1", date: "2025-09-20", title: "Replay feature study", body: "Share configs and best practices." },
-    { id: "a2", date: "2025-10-01", title: "Osaka off-site planning", body: "Market on Dec 29, dinner hotpot." }
+    { id: "a1", date: "2025-09-20", title: "リプレイ機能の勉強会", body: "設定共有とベストプラクティスを確認" },
+    { id: "a2", date: "2025-10-01", title: "大阪オフ会の計画", body: "12/29 市場で買い出し、夜は鍋予定" }
   ];
 }
