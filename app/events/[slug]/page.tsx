@@ -20,7 +20,11 @@ export default async function EventDetail({ params }: { params: { slug: string }
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">アルバム（最新3枚）</h2>
-        <AlbumGrid images={images.slice(0,3).map(i => i.url)} role={user.role} />
+       <AlbumGrid
+  images={images.slice(0,3).map(i => i.url)}
+  role={user?.role ?? "Guest"} 
+/>
+
         <p className="text-sm text-neutral-500">※ アルバム全体はこのイベントページからのみ閲覧可能です</p>
       </section>
     </div>
