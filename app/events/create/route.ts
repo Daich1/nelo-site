@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { addEventRow, listEventsFromSheet } from "../lib/sheets";
+import { addEventRow } from "@/lib/sheets";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
