@@ -7,7 +7,7 @@ export default function SignInPage() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0042a1] to-[#f0558b]">
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-12 text-center max-w-md w-full">
         {/* 👇 /public は不要 */}
-<Image 
+<img 
   src="/logo.png" 
   alt="Nelo Logo" 
   width={100} 
