@@ -1,35 +1,39 @@
+import { google } from "googleapis";
 import { NextRequest, NextResponse } from "next/server";
-import { getDrive } from "@/lib/googleDrive";
 
-// Next.js が用意している Context 型を使う
-interface RouteContext {
-  params: { id: string };
-}
+const auth = new google.auth.GoogleAuth({
+  credentials: {
+    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  },
+  scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+});
 
-export async function GET(req: NextRequest, context: RouteContext) {
-  const { id } = context.params;
+const drive = google.drive({ version: "v3", auth });
+
+export async function GET(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
+  const fileId = context.params.id;
 
   try {
-    const drive = getDrive();
-
-    // Google Drive から画像データを取得
-    const res = await drive.files.get(
-      { fileId: id, alt: "media" },
-      { responseType: "stream" }
+    const response = await drive.files.get(
+      { fileId, alt: "media" },
+      { responseType: "arraybuffer" }
     );
 
-    return new Response(res.data as any, {
+    const buffer = Buffer.from(response.data as ArrayBuffer);
+
+    return new NextResponse(buffer, {
       headers: {
-        "Content-Type":
-          (res.headers["content-type"] as string) || "application/octet-stream",
-        "Cache-Control": "public, max-age=3600",
+        "Content-Type": "image/jpeg", // TODO: 動的に判定したければ fields: "mimeType" を使う
+        "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
-  } catch (err: any) {
-    console.error("Drive fetch error", err.message);
-    return NextResponse.json(
-      { error: "Failed to fetch image from Drive", details: err.message },
-      { status: 500 }
-    );
+  } catch (e: unknown) {
+    const message =
+      e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
