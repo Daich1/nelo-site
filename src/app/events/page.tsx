@@ -5,7 +5,7 @@ import { listEvents } from "@/lib/data";
 export default async function EventsPage(){
 const events = await listEvents();
 const byMonth = events.reduce<Record<string, typeof events>>((acc, e)=>{
-const k = e.date.slice(0,7); // YYYY-MM
+const k = e.date.slice(0,7);
 (acc[k] ||= []).push(e);
 return acc;
 }, {});

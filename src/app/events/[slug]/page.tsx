@@ -27,7 +27,7 @@ return (
 <section className="space-y-3">
 <h2 className="text-lg font-semibold">Album (latest 3)</h2>
 <AlbumGrid images={ev.images.slice(0,3)} role={user.role} />
-<p className="text-sm text-neutral-500">* Full album is accessible **only from this event page** (no separate Albums page per latest design).</p>
+<p className="text-sm text-neutral-500">* Full album is accessible **only from this event page** (no separate Albums page).</p>
 </section>
 </div>
 );

@@ -8,7 +8,7 @@ export type Role = "Admin"|"Nelo"|"Member"|"Guest";
 
 
 export function AlbumGrid({ images, role }: { images: string[]; role: Role }){
-const canView = role !== "Guest"; // latest design: guests cannot see photos
+const canView = role !== "Guest";
 return (
 <div className="grid grid-cols-3 gap-3">
 {images.map((src, i) => (
