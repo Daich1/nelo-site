@@ -11,8 +11,11 @@ const auth = new google.auth.GoogleAuth({
 
 const drive = google.drive({ version: "v3", auth });
 
-export async function GET(req: NextRequest, context: any) {
-  const fileId = context.params.id;
+export async function GET(
+  req: NextRequest,
+  context: { params: Record<string, string | string[]> }
+) {
+  const fileId = context.params.id as string;
 
   try {
     const response = await drive.files.get(
