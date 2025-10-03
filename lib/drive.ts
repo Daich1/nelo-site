@@ -13,16 +13,10 @@ export function driveClient(scope: string) {
   return google.drive({ version: "v3", auth });
 }
 
-/**
- * Neloサイト用の親フォルダ配下にイベントフォルダを確保
- * @param eventId イベントID（フォルダ名）
- * @param title   イベントタイトル（説明用）
- * @returns フォルダID
- */
+/** Neloサイト用の親フォルダ配下にイベントフォルダを確保（存在すれば再利用） */
 export async function ensureEventFolder(eventId: string, title?: string): Promise<string> {
   const drive = driveClient("https://www.googleapis.com/auth/drive");
 
-  // 既存フォルダを検索（親フォルダ限定）
   const res = await drive.files.list({
     q: `'${ROOT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and name='${eventId}' and trashed=false`,
     fields: "files(id, name)",
@@ -33,7 +27,6 @@ export async function ensureEventFolder(eventId: string, title?: string): Promis
     return res.data.files[0].id!;
   }
 
-  // 無ければ作成
   const folder = await drive.files.create({
     requestBody: {
       name: eventId,

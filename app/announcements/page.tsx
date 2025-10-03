@@ -1,28 +1,51 @@
-import { listAnnouncementsFromSheet } from "@/lib/sheets";
+"use client";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-export default async function AnnouncementsPage() {
-  const announcements = await listAnnouncementsFromSheet();
+export default function AnnouncementsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [rows, setRows] = useState<any[][]>([]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/announcements/list")
+        .then((res) => res.json())
+        .then((data) => setRows(data.values || []));
+    }
+  }, [status]);
+
+  if (status === "loading") return <div className="p-6">Loading...</div>;
+  if (status === "unauthenticated") return null;
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold mb-4">お知らせ一覧</h1>
-      {announcements.length === 0 ? (
-        <p className="text-neutral-500">まだお知らせはありません。</p>
-      ) : (
-        <ul className="space-y-4">
-          {announcements.map((a) => (
-            <li key={a.id} className="border rounded-lg p-4 bg-white/70 shadow">
-              <h2 className="text-lg font-semibold">{a.title}</h2>
-              <p className="text-sm text-neutral-500">{a.date} / {a.createdBy}</p>
-              <p className="mt-2">{a.summary}</p>
-              <details className="mt-2">
-                <summary className="cursor-pointer text-blue-600">続きを読む</summary>
-                <p className="mt-2 whitespace-pre-wrap">{a.content}</p>
-              </details>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="font-bold text-2xl">お知らせ一覧</h1>
+        {session?.user?.role === "Admin" && (
+          <Link href="/announcements/create" className="bg-blue-600 text-white px-4 py-2 rounded">
+            + 新規お知らせ
+          </Link>
+        )}
+      </div>
+
+      <ul className="space-y-2">
+        {rows.map((r, i) => (
+          <li key={i} className="border p-3 rounded bg-white">
+            <div className="font-semibold">{r[1]}</div>
+            <div className="text-sm text-gray-500">{r[3]}</div>
+            <p>{r[2]}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

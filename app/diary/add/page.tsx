@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function MahjongListPage() {
+export default function DiaryListPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [rows, setRows] = useState<any[][]>([]);
@@ -17,7 +17,7 @@ export default function MahjongListPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      fetch("/api/mahjong/list")
+      fetch("/api/diary/list")
         .then((res) => res.json())
         .then((data) => setRows(data.values || []));
     }
@@ -29,27 +29,28 @@ export default function MahjongListPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="font-bold text-2xl">麻雀戦績一覧</h1>
+        <h1 className="font-bold text-2xl">日記一覧</h1>
         {session?.user?.role === "Admin" && (
-          <Link href="/mahjong/add" className="bg-blue-600 text-white px-4 py-2 rounded">
-            + 新規戦績
+          <Link href="/diary/add" className="bg-blue-600 text-white px-4 py-2 rounded">
+            + 新規日記
           </Link>
         )}
       </div>
 
-      <table className="border-collapse border w-full">
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i}>
-              {r.map((cell, j) => (
-                <td key={j} className="border px-2 py-1">
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ul className="space-y-3">
+        {rows.map((r, i) => (
+          <li key={i} className="border p-3 rounded bg-white">
+            <Link
+              href={`/diary/${r[0]}`}
+              className="text-lg font-semibold text-blue-600 hover:underline"
+            >
+              {r[1]}
+            </Link>
+            <div className="text-sm text-gray-500">{r[3]}</div>
+            <p className="text-sm mt-1">{r[2]?.slice(0, 50)}...</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -1,26 +1,19 @@
 import "./globals.css";
-import { ReactNode } from "react";
-import { Navbar } from "@/components/Navbar";
-import { Providers } from "@/components/Providers";
-
+import Navbar from "@/components/Navbar";
+import type { ReactNode } from "react";
 
 export const metadata = {
-title: "N - Nelo",
-description: "Nelo internal site"
+  title: "Nelo Site",
+  description: "Internal tools",
 };
 
-
-export default function RootLayout({ children }: { children: ReactNode }){
-return (
-<html lang="ja" suppressHydrationWarning>
-<body className="min-h-screen bg-neutral-50 text-neutral-900">
-<Providers>
-<div className="mx-auto max-w-6xl px-4">
-<Navbar />
-<main className="py-6">{children}</main>
-</div>
-</Providers>
-</body>
-</html>
-);
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="ja">
+      <body className="min-h-screen bg-gray-50 text-gray-900">
+        <Navbar />
+        <main className="max-w-5xl mx-auto px-4 py-6">{children}</main>
+      </body>
+    </html>
+  );
 }

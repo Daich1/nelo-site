@@ -12,18 +12,22 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* 左側メニュー */}
           <div className="flex items-center space-x-6">
-            <Link href="/" className="font-bold text-lg hover:text-[#f0558b]">Nelo</Link>
+            <Link href="/" className="font-bold text-lg hover:text-[#f0558b]">
+              Nelo
+            </Link>
             <Link href="/schedule" className="hover:text-[#f0558b]">年間スケジュール</Link>
             <Link href="/events" className="hover:text-[#f0558b]">イベント</Link>
             <Link href="/announcements" className="hover:text-[#f0558b]">お知らせ</Link>
-            <Link href="/diary" className="hover:text-[#f0558b]">日記</Link> {/* ← 追加 */}
+            <Link href="/diary" className="hover:text-[#f0558b]">日記</Link>
+            <Link href="/mahjong/list" className="hover:text-[#f0558b]">麻雀</Link>
+            <Link href="/valorant/stats" className="hover:text-[#f0558b]">Valorant</Link>
           </div>
 
           {/* 右側（ログイン状態） */}
           <div>
             {session ? (
               <div className="flex items-center space-x-4">
-                <span>{session.user.name} ({session.user.role})</span>
+                <span>{session.user?.name}</span>
                 <button
                   onClick={() => signOut()}
                   className="px-3 py-1 bg-[#f0558b] rounded hover:bg-pink-600"

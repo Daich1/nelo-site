@@ -1,49 +1,33 @@
+"use client";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { useEffect, useState } from "react";
 
-export default async function Home() {
-  const user = await getCurrentUser();
+export default function AnnouncementsPage() {
+  const [rows, setRows] = useState<any[][]>([]);
+  useEffect(() => {
+    fetch("/api/announcements/list")
+      .then(res => res.json())
+      .then(data => setRows(data.values || []));
+  }, []);
 
   return (
-    <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-2xl p-8 bg-gradient-to-tr from-brand-primary to-brand-accent text-white">
-        <h1 className="text-3xl md:text-5xl font-bold">Nelo Internal</h1>
-        <p className="mt-2 opacity-90">イベント、スケジュール、アルバムを一括管理</p>
-        <div className="mt-6 flex gap-3">
-          <Link
-            href="/events"
-            className="bg-white/10 hover:bg-white/20 transition px-4 py-2 rounded-xl"
-          >
-            イベント一覧を見る
-          </Link>
-          <Link
-            href="/schedule"
-            className="bg-white text-neutral-900 hover:opacity-90 transition px-4 py-2 rounded-xl"
-          >
-            年間スケジュール
-          </Link>
-        </div>
-      </section>
-
-      <section className="grid md:grid-cols-3 gap-4">
-        <Link href="/announcements" className="card">
-          <h3 className="font-semibold">お知らせ</h3>
-          <p className="text-sm text-neutral-500">最新のお知らせ</p>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="font-bold text-2xl">お知らせ一覧</h1>
+        <Link href="/announcements/create" className="bg-blue-600 text-white px-4 py-2 rounded">
+          + 新規お知らせ
         </Link>
-        <Link href="/events" className="card">
-          <h3 className="font-semibold">イベント</h3>
-          <p className="text-sm text-neutral-500">イベント詳細とアルバム</p>
-        </Link>
-        <Link href="/schedule" className="card">
-          <h3 className="font-semibold">年間スケジュール</h3>
-          <p className="text-sm text-neutral-500">月ごとの予定</p>
-        </Link>
-      </section>
-
-      <div className="text-sm text-neutral-500">
-        権限:{" "}
-        <span className="font-medium">{user?.role ?? "Guest"}</span>
       </div>
+
+      <ul className="space-y-2">
+        {rows.map((r, i) => (
+          <li key={i} className="border p-3 rounded bg-white">
+            <div className="font-semibold">{r[1]}</div>
+            <div className="text-sm text-gray-500">{r[3]}</div>
+            <p>{r[2]}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

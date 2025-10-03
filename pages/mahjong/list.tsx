@@ -1,40 +1,37 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function MahjongListPage() {
-  const [rows, setRows] = useState<string[][]>([]);
-  const [loading, setLoading] = useState(true);
-
+  const [rows, setRows] = useState<any[][]>([]);
   useEffect(() => {
     fetch("/api/mahjong/list")
-      .then((res) => res.json())
-      .then((data) => {
-        setRows(data.values || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then(res => res.json())
+      .then(data => setRows(data.values || []));
   }, []);
 
-  if (loading) return <div className="p-4">Loading...</div>;
-
   return (
-    <div className="p-6">
-      <h1 className="font-bold text-xl mb-4">麻雀戦績一覧</h1>
-      <div className="overflow-x-auto">
-        <table className="border-collapse border min-w-[600px]">
-          <tbody>
-            {rows.map((row, i) => (
-              <tr key={i}>
-                {row.map((cell, j) => (
-                  <td key={j} className="border px-3 py-2 text-sm">
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="font-bold text-2xl">麻雀戦績一覧</h1>
+        <Link href="/mahjong/add" className="bg-blue-600 text-white px-4 py-2 rounded">
+          + 新規戦績
+        </Link>
       </div>
+
+      <table className="border-collapse border w-full">
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              {r.map((cell, j) => (
+                <td key={j} className="border px-2 py-1">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
