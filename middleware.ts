@@ -2,6 +2,7 @@ export { default } from "next-auth/middleware";
 
 export const config = {
   matcher: [
-    "/((?!api/auth|signin).*)", // 👈 /signin を除外
+    // /signin は除外して、それ以外は全部保護
+    "/((?!api|_next|signin).*)",
   ],
 };

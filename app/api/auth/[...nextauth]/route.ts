@@ -1,4 +1,3 @@
-// app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
@@ -10,9 +9,11 @@ const authOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: "/signin", // 未ログイン時は必ずここへ
+  },
 };
 
-// App Router では default export ではなく GET/POST を export する
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
