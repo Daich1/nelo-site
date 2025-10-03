@@ -2,13 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-
-:root{ --brand-primary:#0042a1; --brand-accent:#f0558b; }
-
-
-html,body{ height:100%; }
-
-
-/* Cards */
-.card{ @apply rounded-2xl shadow p-4 bg-white; }
-.dark .card{ @apply bg-neutral-900; }
+/* 好みで追加 */
+body {
+  font-family: 'Inter', sans-serif;
+}
