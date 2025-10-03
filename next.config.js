@@ -1,12 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "*.githubusercontent.com" }
-    ]
+  // ❌ これがあると next-auth が動かないので削除
+  // output: "export",
+  reactStrictMode: true,
+  experimental: {
+    serverActions: true,
   },
-  experimental: { serverActions: { allowedOrigins: ["*"] } }
 };
 
 module.exports = nextConfig;
