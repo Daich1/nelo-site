@@ -1,5 +1,7 @@
 import { google } from "googleapis";
 
+const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_ROOT_FOLDER as string;
+
 export function driveClient(scope: string) {
   const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -12,17 +14,17 @@ export function driveClient(scope: string) {
 }
 
 /**
- * イベントごとのフォルダを Drive 上に用意する（存在しなければ作成）
- * @param eventId イベントID（フォルダ名に利用）
- * @param title   イベントのタイトル（説明用に任意）
+ * Neloサイト用の親フォルダ配下にイベントフォルダを確保
+ * @param eventId イベントID（フォルダ名）
+ * @param title   イベントタイトル（説明用）
  * @returns フォルダID
  */
 export async function ensureEventFolder(eventId: string, title?: string): Promise<string> {
   const drive = driveClient("https://www.googleapis.com/auth/drive");
 
-  // 既存フォルダを検索
+  // 既存フォルダを検索（親フォルダ限定）
   const res = await drive.files.list({
-    q: `mimeType='application/vnd.google-apps.folder' and name='${eventId}' and trashed=false`,
+    q: `'${ROOT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and name='${eventId}' and trashed=false`,
     fields: "files(id, name)",
     pageSize: 1,
   });
@@ -31,12 +33,13 @@ export async function ensureEventFolder(eventId: string, title?: string): Promis
     return res.data.files[0].id!;
   }
 
-  // 無ければ新規作成
+  // 無ければ作成
   const folder = await drive.files.create({
     requestBody: {
       name: eventId,
       mimeType: "application/vnd.google-apps.folder",
       description: title || "",
+      parents: [ROOT_FOLDER_ID],
     },
     fields: "id",
   });
