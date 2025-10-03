@@ -1,59 +1,30 @@
 import Link from "next/link";
-import Image from "next/image";
-import { listEvents } from "@/lib/data";
-import { listDriveImages } from "@/lib/googleDrive";
+import { listEventsFromSheet } from "@/lib/sheets";
 
 export default async function EventsPage() {
-  const events = await listEvents();
-
-  // 先に画像をまとめて取得
-  const withThumbs = await Promise.all(
-    events.map(async (ev) => {
-      const imgs = await listDriveImages(ev.folderId);
-      return { ...ev, thumb: imgs[0]?.url || null };
-    })
-  );
-
-  // 月ごとにグループ化
-  const byMonth: Record<string, typeof withThumbs> = {};
-  for (const e of withThumbs) {
-    const k = e.date.slice(0, 7);
-    (byMonth[k] ||= []).push(e);
-  }
-  const months = Object.keys(byMonth).sort();
+  const events = await listEventsFromSheet();
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">イベント一覧</h1>
-      <div className="space-y-8">
-        {months.map((m) => (
-          <section key={m} className="space-y-3">
-            <h2 className="text-lg font-semibold">{m}</h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              {byMonth[m].map((ev) => (
-                <Link
-                  key={ev.slug}
-                  href={`/events/${ev.slug}`}
-                  className="card hover:shadow-md transition"
-                >
-                  <div className="relative w-full h-40 mb-3 rounded-lg overflow-hidden bg-neutral-100">
-                    {ev.thumb && (
-                      <Image
-                        src={ev.thumb}
-                        alt={ev.title}
-                        fill
-                        className="object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="font-medium">{ev.title}</div>
-                  <div className="text-sm text-neutral-500">{ev.date}</div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold mb-4">イベント一覧</h1>
+      {events.length === 0 ? (
+        <p className="text-neutral-500">まだイベントはありません。</p>
+      ) : (
+        <ul className="space-y-4">
+          {events.map((event) => (
+            <li key={event.slug} className="border rounded-lg p-4 bg-white/70 shadow">
+              <h2 className="text-lg font-semibold">{event.title}</h2>
+              <p className="text-sm text-neutral-500">
+                {event.date} / {event.location} / {event.type}
+              </p>
+              <p className="mt-2">{event.summary}</p>
+              <Link href={`/events/${event.slug}`} className="mt-3 inline-block text-blue-600 hover:underline">
+                詳細を見る
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

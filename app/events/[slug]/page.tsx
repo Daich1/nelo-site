@@ -1,31 +1,63 @@
-import { notFound } from "next/navigation";
-import { getEventBySlug } from "@/lib/data";
-import { getCurrentUser } from "@/lib/auth";
-import { AlbumGrid } from "@/components/album/AlbumGrid";
-import { listDriveImages } from "@/lib/googleDrive";
+import { getEventBySlug } from "@/lib/sheets";
+import { listFolderImages } from "@/lib/drive";
 
-export default async function EventDetail({ params }: { params: { slug: string }}) {
-  const ev = await getEventBySlug(params.slug);
-  if (!ev) return notFound();
+interface Props {
+  params: { slug: string };
+}
 
-  const user = await getCurrentUser();
-  const images = await listDriveImages(ev.folderId);
+export default async function EventDetailPage({ params }: Props) {
+  const event = await getEventBySlug(params.slug);
+  if (!event) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <h1 className="text-xl font-bold text-red-600">イベントが見つかりません</h1>
+      </div>
+    );
+  }
+
+  const images = event.folderId ? await listFolderImages(event.folderId, 3) : [];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{ev.title}</h1>
-      <div className="text-sm text-neutral-500">{ev.date} ・ {ev.location}</div>
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
+      <h1 className="text-3xl font-bold">{event.title}</h1>
+      <p className="text-sm text-neutral-500">
+        {event.date} / {event.location} / {event.type}
+      </p>
 
-      <p className="text-neutral-700">{ev.description}</p>
+      <p className="text-lg">{event.summary}</p>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">アルバム（最新3枚）</h2>
-       <AlbumGrid
-  images={images.slice(0,3).map(i => i.url)}
-  role={user?.role ?? "Guest"} 
-/>
+      <section className="mt-6">
+        <h2 className="text-xl font-semibold mb-2">詳細</h2>
+        <p className="whitespace-pre-wrap">{event.description}</p>
+      </section>
 
-        <p className="text-sm text-neutral-500">※ アルバム全体はこのイベントページからのみ閲覧可能です</p>
+      <section className="mt-6">
+        <h2 className="text-xl font-semibold mb-2">アルバム</h2>
+        {event.folderId ? (
+          <>
+            {images.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {images.map((img) => (
+                  <a key={img.id} href={img.link} target="_blank" rel="noopener noreferrer">
+                    <img src={img.thumbnail} alt={img.name} className="rounded-lg shadow hover:opacity-80 transition" />
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-neutral-500">まだ写真がありません。</p>
+            )}
+            <a
+              href={`https://drive.google.com/drive/folders/${event.folderId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-block text-blue-600 hover:underline"
+            >
+              Google Drive フォルダを開く
+            </a>
+          </>
+        ) : (
+          <p className="text-neutral-500">アルバムはまだ登録されていません。</p>
+        )}
       </section>
     </div>
   );

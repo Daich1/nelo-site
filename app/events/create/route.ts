@@ -5,8 +5,6 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
-
-  // user が null または Admin 以外なら拒否
   if (!user || user.role !== "Admin") {
     return NextResponse.json({ error: "権限がありません" }, { status: 403 });
   }
@@ -15,37 +13,22 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { title, date, location, description, type, summary } = body;
 
-    // slug 生成（例: 2025-10-02-event-title）
     const slug = `${date}-${title.replace(/\s+/g, "-").toLowerCase()}`;
 
-    // Google Drive フォルダ作成
+    // Drive フォルダ作成
     const auth = new google.auth.GoogleAuth({
       credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY as string),
       scopes: ["https://www.googleapis.com/auth/drive"],
     });
     const drive = google.drive({ version: "v3", auth });
-
     const folder = await drive.files.create({
-      requestBody: {
-        name: `${date}_${title}`,
-        mimeType: "application/vnd.google-apps.folder",
-      },
+      requestBody: { name: `${date}_${title}`, mimeType: "application/vnd.google-apps.folder" },
       fields: "id",
     });
-
     const folderId = folder.data.id!;
 
-    // Google Sheets に保存
-    await addEventRow({
-      slug,
-      title,
-      date,
-      location,
-      type,
-      summary,
-      description,
-      folderId,
-    });
+    // Sheets に保存
+    await addEventRow({ slug, title, date, location, type, summary, description, folderId });
 
     return NextResponse.json({ success: true, folderId });
   } catch (err: any) {

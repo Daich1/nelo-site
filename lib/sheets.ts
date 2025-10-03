@@ -1,14 +1,15 @@
-// lib/sheets.ts
 import { google } from "googleapis";
 
-const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY as string),
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-});
+async function getSheets() {
+  const auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY as string),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
+  return google.sheets({ version: "v4", auth });
+}
 
-const sheets = google.sheets({ version: "v4", auth });
-
-export async function addEventRow(event: {
+// --- イベント ---
+export async function addEventRow(data: {
   slug: string;
   title: string;
   date: string;
@@ -18,40 +19,78 @@ export async function addEventRow(event: {
   description: string;
   folderId: string;
 }) {
+  const sheets = await getSheets();
   await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-    range: "A1",
+    range: "Events!A:H",
     valueInputOption: "USER_ENTERED",
-    requestBody: {
-      values: [[
-        event.slug,
-        event.title,
-        event.date,
-        event.location,
-        event.type,
-        event.summary,
-        event.description,
-        event.folderId,
-      ]],
-    },
+    requestBody: { values: [[
+      data.slug, data.title, data.date, data.location,
+      data.type, data.summary, data.description, data.folderId,
+    ]] },
   });
 }
 
 export async function listEventsFromSheet() {
+  const sheets = await getSheets();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-    range: "A2:H",
+    range: "Events!A:H",
   });
-
   const rows = res.data.values || [];
-  return rows.map(r => ({
-    slug: r[0],
-    title: r[1],
-    date: r[2],
-    location: r[3],
-    type: r[4],
-    summary: r[5],
-    description: r[6],
-    folderId: r[7],
+  if (rows.length < 2) return [];
+  return rows.slice(1).map((row) => ({
+    slug: row[0],
+    title: row[1],
+    date: row[2],
+    location: row[3],
+    type: row[4],
+    summary: row[5],
+    description: row[6],
+    folderId: row[7],
+  }));
+}
+
+export async function getEventBySlug(slug: string) {
+  const events = await listEventsFromSheet();
+  return events.find((e) => e.slug === slug) || null;
+}
+
+// --- お知らせ ---
+export async function addAnnouncementRow(data: {
+  id: string;
+  title: string;
+  date: string;
+  summary: string;
+  content: string;
+  createdBy: string;
+}) {
+  const sheets = await getSheets();
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    range: "Announcements!A:F",
+    valueInputOption: "USER_ENTERED",
+    requestBody: { values: [[
+      data.id, data.title, data.date,
+      data.summary, data.content, data.createdBy,
+    ]] },
+  });
+}
+
+export async function listAnnouncementsFromSheet() {
+  const sheets = await getSheets();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+    range: "Announcements!A:F",
+  });
+  const rows = res.data.values || [];
+  if (rows.length < 2) return [];
+  return rows.slice(1).map((row) => ({
+    id: row[0],
+    title: row[1],
+    date: row[2],
+    summary: row[3],
+    content: row[4],
+    createdBy: row[5],
   }));
 }
