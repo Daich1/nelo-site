@@ -1,18 +1,26 @@
 "use client";
+
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
-type DriveFile = { id: string; name: string; thumbnailLink?: string };
+type DriveFile = {
+  id: string;
+  name: string;
+  thumbnailLink?: string;
+};
 
 export default function AlbumPage() {
-  const { id: eventId } = useParams<{ id: string }>();
+  // useParams の戻り値に型アサーションを追加して eventId を安全に取得
+  const params = useParams() as { id: string };
+  const eventId = params.id;
+
   const { data: session } = useSession();
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // アルバム取得
+  // イベントフォルダ内のファイル一覧を取得
   useEffect(() => {
     fetch(`/api/events/${eventId}/album/list`)
       .then((res) => res.json())
@@ -27,7 +35,7 @@ export default function AlbumPage() {
     if (!fileInput?.files?.length) return;
 
     const formData = new FormData();
-    formData.append("eventId", eventId!);
+    formData.append("eventId", eventId);
     for (const file of fileInput.files) {
       formData.append("files", file);
     }
@@ -52,6 +60,7 @@ export default function AlbumPage() {
 
   return (
     <div>
+      {/* ヘッダー部分 */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="font-bold text-2xl">アルバム</h1>
         {session?.user?.role === "Admin" && (
