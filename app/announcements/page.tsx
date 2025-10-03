@@ -1,48 +1,29 @@
 "use client";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+
+import useSWR from "swr";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function AnnouncementsPage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
-  const [rows, setRows] = useState<any[][]>([]);
+  const { data, error, isLoading } = useSWR("/api/announcements/list", fetcher);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/signin");
-    }
-  }, [status, router]);
+  if (status === "loading") return <p>読み込み中...</p>;
+  if (!session) redirect("/signin");
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetch("/api/announcements/list")
-        .then((res) => res.json())
-        .then((data) => setRows(data.values || []));
-    }
-  }, [status]);
-
-  if (status === "loading") return <div className="p-6">Loading...</div>;
-  if (status === "unauthenticated") return null;
+  if (isLoading) return <div>読み込み中...</div>;
+  if (error) return <div>エラーが発生しました</div>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="font-bold text-2xl">お知らせ一覧</h1>
-        {session?.user?.role === "Admin" && (
-          <Link href="/announcements/create" className="bg-blue-600 text-white px-4 py-2 rounded">
-            + 新規お知らせ
-          </Link>
-        )}
-      </div>
-
-      <ul className="space-y-2">
-        {rows.map((r, i) => (
-          <li key={i} className="border p-3 rounded bg-white">
-            <div className="font-semibold">{r[1]}</div>
-            <div className="text-sm text-gray-500">{r[3]}</div>
-            <p>{r[2]}</p>
+    <div className="p-12">
+      <h1 className="text-3xl font-bold mb-6">お知らせ一覧</h1>
+      <ul className="space-y-4">
+        {data?.announcements?.map((a: any) => (
+          <li key={a.id} className="p-4 rounded-lg bg-gray-800 hover:bg-gray-700">
+            <p className="text-xl">{a.title}</p>
+            <p className="text-sm text-gray-400">{a.date}</p>
           </li>
         ))}
       </ul>
