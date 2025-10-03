@@ -10,7 +10,7 @@ const authOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
-    signIn: "/signin", // 未ログイン時は必ずここへ
+    signIn: "/signin", // 未ログイン時のリダイレクト先
   },
 };
 

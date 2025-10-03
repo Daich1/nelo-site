@@ -1,8 +1,12 @@
-// middleware.ts
 export { default } from "next-auth/middleware";
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|signin).*)",
+    "/",               // ホーム
+    "/events/:path*",  // イベント
+    "/announcements/:path*", // お知らせ
+    "/diary/:path*",   // 日記
+    "/schedule",       // スケジュール
+    "/mahjong/:path*", // 麻雀
   ],
 };
