@@ -1,12 +1,17 @@
-import "./globals.css"; // ← これを必ず入れる
-import { SessionProvider } from "next-auth/react";
+import "./globals.css";
+import { Providers } from "./providers";
 import type { ReactNode } from "react";
+
+export const metadata = {
+  title: "Nelo Portal",
+  description: "Neloのポータルサイト",
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja">
-      <body className="bg-black text-white">
-        <SessionProvider>{children}</SessionProvider>
+      <body>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
