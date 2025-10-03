@@ -1,28 +1,24 @@
 "use client";
-import { signIn } from "next-auth/react";
-import Image from "next/image";
+
+import { signIn, useSession } from "next-auth/react";
 
 export default function SignInPage() {
+  const session = useSession();
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#0042a1] to-[#f0558b]">
       <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-12 text-center max-w-md w-full">
-        {/* 👇 /public は不要 */}
-<img 
-  src="/logo.png" 
-  alt="Nelo Logo" 
-  width={100} 
-  height={100} 
-  className="mx-auto mb-6"
-/>
-
-        <h1 className="text-3xl font-extrabold text-[#0042a1] mb-3">Nelo Internal</h1>
-        <p className="mb-8 text-gray-700">Discordでログインして続ける</p>
-        <button
-          onClick={() => signIn("discord", { callbackUrl: "/" })}
-          className="px-6 py-3 w-full rounded-xl bg-[#5865F2] text-white font-semibold shadow-lg hover:bg-[#4752C4] transition"
-        >
-          Discordでログイン
-        </button>
+        <h1 className="text-2xl font-bold mb-6">Sign In</h1>
+        {!session?.data ? (
+          <button
+            onClick={() => signIn("discord")}
+            className="bg-[#0042a1] text-white px-6 py-3 rounded-lg hover:bg-[#003080]"
+          >
+            Discord でログイン
+          </button>
+        ) : (
+          <p>ログイン済み: {session.data.user?.name}</p>
+        )}
       </div>
     </div>
   );
