@@ -1,26 +1,32 @@
-import { NextRequest, NextResponse } from "next/server";
-import { DriveFile, ListFilesQuery } from "@/types/drive";
+import { google } from "googleapis";
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const eventId = searchParams.get("eventId");
-  const pageSizeRaw = searchParams.get("pageSize");
 
   if (!eventId) {
-    return NextResponse.json({ error: "eventId is required" }, { status: 400 });
+    return NextResponse.json({ files: [] });
   }
 
-  const query: ListFilesQuery = {
-    eventId,
-    pageSize: pageSizeRaw ? Number(pageSizeRaw) : undefined,
-  };
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    },
+    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+  });
 
-  const files: DriveFile[] = [
-    { id: "1", name: "sample1.jpg", mimeType: "image/jpeg" },
-    { id: "2", name: "sample2.jpg", mimeType: "image/jpeg" },
-    { id: "3", name: "sample3.jpg", mimeType: "image/jpeg" },
-  ];
+  const drive = google.drive({ version: "v3", auth });
 
-  const limit = query.pageSize ?? files.length;
-  return NextResponse.json({ files: files.slice(0, limit) });
+  // TODO: eventId → 実際は Drive フォルダIDをDBに保存して紐付ける
+  const folderId = process.env.TEST_FOLDER_ID!;
+
+  const res = await drive.files.list({
+    q: `'${folderId}' in parents and trashed=false`,
+    fields: "files(id, name, createdTime)",
+    orderBy: "createdTime desc",
+  });
+
+  return NextResponse.json({ files: res.data.files });
 }

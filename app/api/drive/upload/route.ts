@@ -1,32 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
-import { DriveFile, UploadResult } from "@/types/drive";
+import { NextResponse } from "next/server";
+import { driveClient, ensureEventFolder } from "@/lib/drive";
 
-export const runtime = "edge";
+export async function POST(req: Request) {
+  try {
+    const form = await req.formData();
+    const eventId = String(form.get("eventId") ?? "");
+    const title = (form.get("title") as string) || "";
 
-export async function POST(req: NextRequest) {
-  const contentType = req.headers.get("content-type") ?? "";
-  if (!contentType.includes("multipart/form-data")) {
-    return NextResponse.json({ error: "multipart/form-data required" }, { status: 400 });
+    if (!eventId) {
+      return NextResponse.json({ error: "eventId is required" }, { status: 400 });
+    }
+
+    const files = form.getAll("files") as File[];
+    if (!files.length) {
+      return NextResponse.json({ error: "No files" }, { status: 400 });
+    }
+
+    const folderId = await ensureEventFolder(eventId, title);
+    const drive = driveClient("https://www.googleapis.com/auth/drive.file");
+
+    const results: { name: string; id: string }[] = [];
+    for (const file of files) {
+      const buf = Buffer.from(await file.arrayBuffer());
+      const res = await drive.files.create({
+        requestBody: { name: file.name, parents: [folderId] },
+        media: {
+          mimeType: file.type || "application/octet-stream",
+          body: buf as any,   // 👈 型エラー回避
+        },
+        fields: "id, name",
+      });
+      results.push({ name: res.data.name!, id: res.data.id! });
+    }
+
+    return NextResponse.json({ ok: true, uploaded: results, folderId });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
-
-  const form = await req.formData();
-  const file = form.get("file");
-  const eventId = form.get("eventId");
-
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: "file is required" }, { status: 400 });
-  }
-  if (typeof eventId !== "string" || !eventId) {
-    return NextResponse.json({ error: "eventId is required" }, { status: 400 });
-  }
-
-  const uploaded: DriveFile = {
-    id: `file_${Date.now()}`,
-    name: file.name,
-    mimeType: file.type,
-    sizeBytes: file.size,
-  };
-
-  const result: UploadResult = { file: uploaded };
-  return NextResponse.json(result, { status: 201 });
 }

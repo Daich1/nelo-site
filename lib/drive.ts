@@ -1,27 +1,45 @@
 import { google } from "googleapis";
 
-export async function listFolderImages(folderId: string, maxResults = 3) {
-  if (!folderId) return [];
-
+export function driveClient(scope: string) {
   const auth = new google.auth.GoogleAuth({
-    credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY as string),
-    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+    credentials: {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    },
+    scopes: [scope],
   });
-  const drive = google.drive({ version: "v3", auth });
+  return google.drive({ version: "v3", auth });
+}
 
+/**
+ * イベントごとのフォルダを Drive 上に用意する（存在しなければ作成）
+ * @param eventId イベントID（フォルダ名に利用）
+ * @param title   イベントのタイトル（説明用に任意）
+ * @returns フォルダID
+ */
+export async function ensureEventFolder(eventId: string, title?: string): Promise<string> {
+  const drive = driveClient("https://www.googleapis.com/auth/drive");
+
+  // 既存フォルダを検索
   const res = await drive.files.list({
-    q: `'${folderId}' in parents and mimeType contains 'image/' and trashed = false`,
-    orderBy: "createdTime desc",
-    pageSize: maxResults,
-    fields: "files(id, name, thumbnailLink, webViewLink)",
+    q: `mimeType='application/vnd.google-apps.folder' and name='${eventId}' and trashed=false`,
+    fields: "files(id, name)",
+    pageSize: 1,
   });
 
-  return (
-    res.data.files?.map((file) => ({
-      id: file.id!,
-      name: file.name!,
-      thumbnail: file.thumbnailLink!,
-      link: file.webViewLink!,
-    })) || []
-  );
+  if (res.data.files && res.data.files.length > 0) {
+    return res.data.files[0].id!;
+  }
+
+  // 無ければ新規作成
+  const folder = await drive.files.create({
+    requestBody: {
+      name: eventId,
+      mimeType: "application/vnd.google-apps.folder",
+      description: title || "",
+    },
+    fields: "id",
+  });
+
+  return folder.data.id!;
 }
