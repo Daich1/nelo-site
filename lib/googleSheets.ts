@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
-const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID as string;
+export const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID as string;
 
 export async function getSheetsClient() {
   const auth = new google.auth.GoogleAuth({
@@ -13,5 +13,3 @@ export async function getSheetsClient() {
   });
   return google.sheets({ version: "v4", auth });
 }
-
-export { SPREADSHEET_ID };
