@@ -1,7 +1,7 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
-const authOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,
@@ -10,7 +10,13 @@ const authOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
-    signIn: "/signin", // 未ログイン時のリダイレクト先
+    signIn: "/signin",
+  },
+  callbacks: {
+    async redirect({ baseUrl }: { baseUrl: string }) {
+      // ログイン後は必ずホームに飛ばす
+      return baseUrl + "/";
+    },
   },
 };
 
