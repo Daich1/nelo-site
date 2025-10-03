@@ -1,7 +1,8 @@
+// app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
-export default NextAuth({
+const authOptions = {
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,
@@ -9,4 +10,9 @@ export default NextAuth({
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
+
+// App Router では default export ではなく GET/POST を export する
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
