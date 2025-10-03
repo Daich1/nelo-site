@@ -1,16 +1,12 @@
 import "./globals.css";
-import Providers from "./providers";
+import type { ReactNode } from "react";
+import SessionWrapper from "./session-wrapper";
 
-export const metadata = {
-  title: "Nelo Site",
-  description: "Nelo internal site",
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja">
       <body>
-        <Providers>{children}</Providers>
+        <SessionWrapper>{children}</SessionWrapper>
       </body>
     </html>
   );
