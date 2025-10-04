@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,8 +22,8 @@ export default function EventPage({ params }: { params: { id: string } }) {
   const [event, setEvent] = useState<any>(null);
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<DriveFile | null>(null);
 
-  // イベント情報を取得
   const fetchEvent = async () => {
     const { data, error } = await supabase
       .from("events")
@@ -32,7 +34,6 @@ export default function EventPage({ params }: { params: { id: string } }) {
     else setEvent(data);
   };
 
-  // Driveフォルダ内のファイル一覧を取得
   const fetchDriveFiles = async (folderId: string) => {
     try {
       const res = await fetch(
@@ -48,10 +49,7 @@ export default function EventPage({ params }: { params: { id: string } }) {
   };
 
   useEffect(() => {
-    const load = async () => {
-      await fetchEvent();
-    };
-    load();
+    fetchEvent();
   }, [params.id]);
 
   useEffect(() => {
@@ -65,7 +63,18 @@ export default function EventPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="p-8 flex flex-col items-center">
+    <div className="p-6 sm:p-10 max-w-6xl mx-auto">
+      {/* 🧭 ナビゲーションバー */}
+      <div className="flex items-center mb-8">
+        <Link
+          href="/events"
+          className="flex items-center gap-2 text-[#0042a1] font-semibold hover:text-[#f0558b] transition"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          一覧へ戻る
+        </Link>
+      </div>
+
       {/* タイトル */}
       <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
 
@@ -93,11 +102,9 @@ export default function EventPage({ params }: { params: { id: string } }) {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {files.map((file) => (
-                <a
+                <button
                   key={file.id}
-                  href={file.webViewLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  onClick={() => setSelected(file)}
                   className="group relative overflow-hidden rounded-xl shadow hover:shadow-lg transition"
                 >
                   <img
@@ -109,13 +116,46 @@ export default function EventPage({ params }: { params: { id: string } }) {
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition" />
-                </a>
+                </button>
               ))}
             </div>
           )}
         </>
       ) : (
         <p className="text-gray-400 mt-10">Google Driveフォルダが登録されていません。</p>
+      )}
+
+      {/* 🔍 モーダル（拡大プレビュー） */}
+      {selected && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={() => setSelected(null)}
+        >
+          <div className="relative max-w-5xl w-full flex justify-center">
+            {selected.mimeType.startsWith("video/") ? (
+              <video
+                src={`https://drive.google.com/uc?id=${selected.id}`}
+                controls
+                autoPlay
+                className="max-h-[90vh] rounded-xl shadow-lg"
+              />
+            ) : (
+              <img
+                src={`https://drive.google.com/uc?id=${selected.id}`}
+                alt={selected.name}
+                className="max-h-[90vh] rounded-xl shadow-lg"
+              />
+            )}
+
+            {/* 閉じるボタン */}
+            <button
+              className="absolute top-4 right-4 text-white text-3xl font-bold hover:text-pink-300"
+              onClick={() => setSelected(null)}
+            >
+              ×
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
