@@ -14,9 +14,6 @@ type DriveFile = {
   id: string;
   name: string;
   mimeType: string;
-  thumbnailLink?: string;
-  webViewLink?: string;
-  webContentLink?: string;
 };
 
 export default function EventPage({ params }: { params: { id: string } }) {
@@ -40,7 +37,7 @@ export default function EventPage({ params }: { params: { id: string } }) {
   const fetchDriveFiles = async (folderId: string) => {
     try {
       const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+(mimeType+contains+'image/'or+mimeType+contains+'video/')&fields=files(id,name,mimeType,thumbnailLink,webViewLink,webContentLink)&key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}`
+        `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+(mimeType+contains+'image/'or+mimeType+contains+'video/')&fields=files(id,name,mimeType)&key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}`
       );
       const json = await res.json();
       setFiles(json.files || []);
@@ -112,11 +109,9 @@ export default function EventPage({ params }: { params: { id: string } }) {
                   onClick={() => setSelected(file)}
                   className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition"
                 >
+                  {/* ✅ サムネイルもDrive直リンク形式 */}
                   <img
-                    src={
-                      file.thumbnailLink ||
-                      `https://drive.google.com/thumbnail?id=${file.id}`
-                    }
+                    src={`https://drive.google.com/thumbnail?id=${file.id}`}
                     alt={file.name}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
                     loading="lazy"
@@ -140,23 +135,16 @@ export default function EventPage({ params }: { params: { id: string } }) {
           <div className="relative max-w-5xl w-full flex justify-center px-4">
             {selected.mimeType.startsWith("video/") ? (
               <video
-                src={
-                  selected.webContentLink ||
-                  `https://drive.google.com/uc?id=${selected.id}`
-                }
+                src={`https://drive.google.com/uc?export=view&id=${selected.id}`}
                 controls
                 autoPlay
                 className="max-h-[90vh] rounded-xl shadow-lg"
               />
             ) : (
               <img
-                src={
-                  selected.webContentLink ||
-                  selected.thumbnailLink ||
-                  `https://drive.google.com/uc?id=${selected.id}`
-                }
+                src={`https://drive.google.com/uc?export=view&id=${selected.id}`}
                 alt={selected.name}
-                className="max-h-[90vh] rounded-xl shadow-lg"
+                className="max-h-[90vh] rounded-xl shadow-lg object-contain"
               />
             )}
 
