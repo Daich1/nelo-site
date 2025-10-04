@@ -1,75 +1,53 @@
-"use client";
-import { useEffect, useState } from "react";
+import fs from "fs/promises";
+import path from "path";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  type: string;
-  description: string;
-  folderId: string;
+async function getEvents() {
+  const filePath = path.join(process.cwd(), "data", "events.json");
+  try {
+    const json = await fs.readFile(filePath, "utf-8");
+    const events = JSON.parse(json);
+    return events.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } catch {
+    return [];
+  }
 }
 
-export default function EventsListPage() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { data: session } = useSession();
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/events/list");
-        const data = await res.json();
-        setEvents(data.events || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  if (loading) return <p>読み込み中...</p>;
+export default async function EventsPage() {
+  const events = await getEvents();
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">イベント一覧</h1>
-
-        {/* ✅ Admin / Nelo のみ表示 */}
-        {(session?.user as any)?.role === "Admin" ||
-         (session?.user as any)?.role === "Nelo" ? (
-          <Link
-            href="/events/create"
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            ＋ イベント作成
-          </Link>
-        ) : null}
-      </div>
+    <div className="p-8 max-w-5xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8 text-center">イベント一覧</h1>
 
       {events.length === 0 ? (
-        <p>イベントがありません。</p>
+        <p className="text-center text-gray-500">まだイベントがありません。</p>
       ) : (
-        <div className="grid gap-4">
-          {events.map((ev) => (
-            <Link key={ev.id} href={`/events/${ev.id}`}>
-              <div className="border rounded-lg p-4 shadow bg-white/80 hover:bg-gray-100 cursor-pointer">
-                <h2 className="font-bold text-lg">{ev.title}</h2>
-                <p className="text-sm text-gray-600">
-                  {ev.date} @ {ev.location}
-                </p>
-                <p className="text-sm text-blue-600">{ev.type}</p>
-                <p className="mt-2 text-gray-800 line-clamp-2">{ev.description}</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {events.map((event: any) => (
+            <Link
+              key={event.id}
+              href={`/events/${event.id}`}
+              className="block border border-gray-300 rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transition p-4 bg-white/90"
+            >
+              <h2 className="text-xl font-semibold mb-2">{event.title}</h2>
+              <p className="text-sm text-gray-500">
+                作成日: {new Date(event.createdAt).toLocaleString("ja-JP")}
+              </p>
+              <div className="mt-3 text-blue-600 font-medium">▶ アルバムを見る</div>
             </Link>
           ))}
         </div>
       )}
+
+      <div className="text-center mt-10">
+        <Link
+          href="/events/create"
+          className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+        >
+          ＋ イベントを作成
+        </Link>
+      </div>
     </div>
   );
 }
