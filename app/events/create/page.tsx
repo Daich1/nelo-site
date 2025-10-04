@@ -3,14 +3,21 @@ import { useState } from "react";
 import AdminGuard from "@/components/AdminGuard";
 
 export default function EventCreatePage() {
-  const [form, setForm] = useState({ id: "", title: "", date: "", description: "" });
+  const [form, setForm] = useState({
+    title: "",
+    date: "",
+    description: "",
+    location: "",
+    type: "",
+    summary: "",
+  });
   const [loading, setLoading] = useState(false);
 
   const onChange = (k: keyof typeof form, v: string) => setForm({ ...form, [k]: v });
 
   const onSubmit = async () => {
-    if (!form.id || !form.title) {
-      alert("ID と Title は必須です");
+    if (!form.title || !form.date) {
+      alert("Title と Date は必須です");
       return;
     }
     setLoading(true);
@@ -22,7 +29,7 @@ export default function EventCreatePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "failed");
-      alert(`作成しました（DriveFolder: ${data.folderId}）`);
+      alert(`作成しました！（ID: ${data.id}）`);
     } catch (e: any) {
       alert("エラー: " + e.message);
     } finally {
@@ -34,11 +41,47 @@ export default function EventCreatePage() {
     <AdminGuard>
       <h1 className="font-bold text-2xl mb-4">イベント作成 (Admin専用)</h1>
       <div className="grid gap-3 max-w-xl">
-        <input className="border p-2 rounded" placeholder="Event ID" value={form.id} onChange={e=>onChange("id", e.target.value)} />
-        <input className="border p-2 rounded" placeholder="Title" value={form.title} onChange={e=>onChange("title", e.target.value)} />
-        <input type="date" className="border p-2 rounded" value={form.date} onChange={e=>onChange("date", e.target.value)} />
-        <textarea className="border p-2 rounded min-h-[120px]" placeholder="Description" value={form.description} onChange={e=>onChange("description", e.target.value)} />
-        <button disabled={loading} onClick={onSubmit} className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-60">
+        <input
+          className="border p-2 rounded"
+          placeholder="Title"
+          value={form.title}
+          onChange={e => onChange("title", e.target.value)}
+        />
+        <input
+          type="date"
+          className="border p-2 rounded"
+          value={form.date}
+          onChange={e => onChange("date", e.target.value)}
+        />
+        <input
+          className="border p-2 rounded"
+          placeholder="Location"
+          value={form.location}
+          onChange={e => onChange("location", e.target.value)}
+        />
+        <input
+          className="border p-2 rounded"
+          placeholder="Type"
+          value={form.type}
+          onChange={e => onChange("type", e.target.value)}
+        />
+        <input
+          className="border p-2 rounded"
+          placeholder="Summary"
+          value={form.summary}
+          onChange={e => onChange("summary", e.target.value)}
+        />
+        <textarea
+          className="border p-2 rounded min-h-[120px]"
+          placeholder="Description"
+          value={form.description}
+          onChange={e => onChange("description", e.target.value)}
+        />
+        <button
+          disabled={loading}
+          onClick={onSubmit}
+          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-60"
+        >
           {loading ? "作成中..." : "作成"}
         </button>
       </div>
