@@ -1,20 +1,26 @@
 import { google } from "googleapis";
 
-const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
+const SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"];
 export const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID as string;
 
 export async function getSheetsClient() {
-  if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
-    throw new Error("Missing Google service account environment variables");
-  }
-
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     },
     scopes: SCOPES,
   });
-
   return google.sheets({ version: "v4", auth });
+}
+
+export async function getDriveClient() {
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    },
+    scopes: SCOPES,
+  });
+  return google.drive({ version: "v3", auth });
 }

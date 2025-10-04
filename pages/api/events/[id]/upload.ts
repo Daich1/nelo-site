@@ -1,51 +1,71 @@
+import { getDriveClient, getSheetsClient, SPREADSHEET_ID } from "@/lib/googleSheets";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { google } from "googleapis";
 import formidable from "formidable";
 import fs from "fs";
 
 export const config = { api: { bodyParser: false } };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   try {
-    const { folderId } = req.query;
-    if (!folderId || typeof folderId !== "string") {
-      return res.status(400).json({ error: "Invalid folderId" });
-    }
+    const drive = await getDriveClient();
+    const sheets = await getSheetsClient();
 
-    const form = formidable({ multiples: true });
-    const [fields, files] = await form.parse(req);
+    const form = formidable();
+    form.parse(req, async (err, fields, files) => {
+      if (err) return res.status(500).json({ error: "Form parse error" });
 
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/drive.file"],
-    });
-    const drive = google.drive({ version: "v3", auth });
+      const eventId = fields.eventId?.[0] as string;
+      const file = files.file?.[0];
+      if (!file || !eventId) return res.status(400).json({ error: "Missing file or eventId" });
 
-    const uploaded: any[] = [];
-    const fileArray = Array.isArray(files.file) ? files.file : [files.file];
+      const filePath = file.filepath;
+      const fileName = file.originalFilename || "upload";
+      const mimeType = file.mimetype || "application/octet-stream";
 
-    for (const file of fileArray) {
-      if (!file) continue;
-      const stream = fs.createReadStream(file.filepath);
-      const resp = await drive.files.create({
+      // Drive にアップロード
+      const uploaded = await drive.files.create({
         requestBody: {
-          name: file.originalFilename || "upload",
-          parents: [folderId],
+          name: fileName,
+          parents: ["1gdUJG4IDaf7LB92bvJjMMb1KGHk1aNyk"], // 共有ドライブID
         },
-        media: { mimeType: file.mimetype || "application/octet-stream", body: stream },
-        fields: "id,webViewLink,thumbnailLink",
+        media: {
+          mimeType,
+          body: fs.createReadStream(filePath),
+        },
+        supportsAllDrives: true,
       });
-      uploaded.push(resp.data);
-    }
 
-    res.status(200).json({ uploaded });
-  } catch (e: any) {
-    console.error(e);
-    res.status(500).json({ error: e.message });
+      const fileId = uploaded.data.id!;
+
+      // 公開権限を付与
+      await drive.permissions.create({
+        fileId,
+        requestBody: { role: "reader", type: "anyone" },
+        supportsAllDrives: true,
+      });
+
+      // Sheets に記録
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Albums!A:E",
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+          values: [[eventId, fileId, fileName, mimeType, new Date().toISOString()]],
+        },
+      });
+
+      res.status(200).json({
+        success: true,
+        fileId,
+        url: `https://drive.google.com/uc?id=${fileId}`,
+      });
+    });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: "Upload failed" });
   }
 }
