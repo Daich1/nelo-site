@@ -63,21 +63,23 @@ export default function EventDetailPage() {
     }
   };
 
-  const onCreateAlbum = async () => {
-    try {
-      const res = await fetch(`/api/events/${id}/createAlbum`);
-      const data = await res.json();
-      if (res.ok) {
-        alert("アルバムを作成しました！");
-        setEvent({ ...event!, folderId: data.folderId });
-        setShowUpload(true);
-      } else {
-        alert("アルバム作成エラー: " + data.error);
-      }
-    } catch (e) {
-      console.error(e);
+const onCreateAlbum = async () => {
+  try {
+    const res = await fetch(`/api/events/${id}/createAlbum`, {
+      method: "POST", // ✅ POST指定
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("アルバムを作成しました！");
+      setEvent({ ...event!, folderId: data.folderId });
+      setShowUpload(true);
+    } else {
+      alert("アルバム作成エラー: " + data.error);
     }
-  };
+  } catch (e) {
+    console.error(e);
+  }
+};
 
   const onUploadFiles = async (files: File[]) => {
     try {
