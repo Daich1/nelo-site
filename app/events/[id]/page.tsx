@@ -127,37 +127,38 @@ export default function EventPage({ params }: { params: { id: string } }) {
       )}
 
       {/* 🔍 モーダル（拡大プレビュー） */}
-      {selected && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fadeIn"
-          onClick={() => setSelected(null)}
-        >
-          <div className="relative max-w-5xl w-full flex justify-center px-4">
-            {selected.mimeType.startsWith("video/") ? (
-              <video
-                src={`https://drive.google.com/uc?export=view&id=${selected.id}`}
-                controls
-                autoPlay
-                className="max-h-[90vh] rounded-xl shadow-lg"
-              />
-            ) : (
-              <img
-                src={`https://drive.google.com/uc?export=view&id=${selected.id}`}
-                alt={selected.name}
-                className="max-h-[90vh] rounded-xl shadow-lg object-contain"
-              />
-            )}
-
-            {/* 閉じるボタン */}
-            <button
-              className="absolute top-4 right-6 text-white text-3xl font-bold hover:text-[#f0558b]"
-              onClick={() => setSelected(null)}
-            >
-              ×
-            </button>
-          </div>
-        </div>
+{selected && (
+  <div
+    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fadeIn"
+    onClick={() => setSelected(null)}
+  >
+    <div className="relative max-w-5xl w-full flex justify-center px-4">
+      {selected.mimeType.startsWith("video/") ? (
+        <video
+          src={`/api/image?id=${selected.id}`}
+          controls
+          autoPlay
+          className="max-h-[90vh] rounded-xl shadow-lg"
+        />
+      ) : (
+        <img
+          src={`/api/image?id=${selected.id}`}
+          alt={selected.name}
+          className="max-h-[90vh] rounded-xl shadow-lg object-contain"
+        />
       )}
+
+      {/* 閉じるボタン */}
+      <button
+        className="absolute top-4 right-6 text-white text-3xl font-bold hover:text-[#f0558b]"
+        onClick={() => setSelected(null)}
+      >
+        ×
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
