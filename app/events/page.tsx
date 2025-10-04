@@ -10,7 +10,7 @@ type EventData = {
   location: string;
   type: string;
   description: string;
-  folderId: string;
+  folder_id: string;
   created_at?: string;
 };
 
@@ -25,7 +25,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<EventData | null>(null);
-  const [form, setForm] = useState<EventData>({
+  const [form, setForm] = useState({
     title: "",
     date: "",
     location: "",
@@ -34,14 +34,14 @@ export default function EventsPage() {
     folderId: "",
   });
 
-  // 🔹 データ取得
+  // イベント取得
   const fetchEvents = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("events")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) console.error(error);
+    if (error) console.error("取得エラー:", error.message);
     else setEvents(data || []);
     setLoading(false);
   };
@@ -50,7 +50,7 @@ export default function EventsPage() {
     fetchEvents();
   }, []);
 
-  // 🔹 モーダル開閉
+  // モーダル制御
   const openCreateModal = () => {
     setEditing(null);
     setForm({
@@ -72,7 +72,7 @@ export default function EventsPage() {
       location: event.location || "",
       type: event.type || "",
       description: event.description || "",
-      folderId: event.folderId || "",
+      folderId: event.folder_id || "",
     });
     setIsModalOpen(true);
   };
@@ -82,17 +82,16 @@ export default function EventsPage() {
     setEditing(null);
   };
 
-  // 🔹 フォーム入力変更
+  // 入力変更
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 🔹 作成 or 更新
+  // 作成 or 更新
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (editing) {
-      // 更新
       const { error } = await supabase
         .from("events")
         .update({
@@ -101,12 +100,11 @@ export default function EventsPage() {
           location: form.location,
           type: form.type,
           description: form.description,
-          folderId: form.folderId,
+          folder_id: form.folderId,
         })
         .eq("id", editing.id);
       if (error) alert("更新失敗: " + error.message);
     } else {
-      // 新規作成
       const { error } = await supabase.from("events").insert([
         {
           title: form.title,
@@ -114,7 +112,7 @@ export default function EventsPage() {
           location: form.location,
           type: form.type,
           description: form.description,
-          folderId: form.folderId,
+          folder_id: form.folderId,
         },
       ]);
       if (error) alert("作成失敗: " + error.message);
@@ -124,7 +122,7 @@ export default function EventsPage() {
     fetchEvents();
   };
 
-  // 🔹 削除
+  // 削除
   const handleDelete = async (id: string) => {
     if (!confirm("本当に削除しますか？")) return;
     const { error } = await supabase.from("events").delete().eq("id", id);
@@ -166,13 +164,37 @@ export default function EventsPage() {
                 <p className="text-gray-600 mt-2 line-clamp-2">{event.description}</p>
               )}
 
+              {/* ✅ Driveフォルダ対応部分 */}
+              <div className="mt-3 space-y-2">
+                {event.folder_id ? (
+                  <>
+                    <a
+                      href={`https://drive.google.com/drive/folders/${event.folder_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-blue-600 font-medium hover:underline"
+                    >
+                      📂 Driveフォルダを開く
+                    </a>
+                    <a
+                      href={`/events/${event.id}`}
+                      className="block text-blue-500 font-medium hover:underline"
+                    >
+                      ▶ アルバムを見る
+                    </a>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => openEditModal(event)}
+                    className="text-pink-600 font-medium hover:underline"
+                  >
+                    ⚠️ Driveフォルダ未登録 — 登録する
+                  </button>
+                )}
+              </div>
+
+              {/* 編集・削除 */}
               <div className="mt-3 flex gap-3">
-                <a
-                  href={`/events/${event.id}`}
-                  className="text-blue-600 font-medium hover:underline"
-                >
-                  ▶ アルバムを見る
-                </a>
                 <button
                   onClick={() => openEditModal(event)}
                   className="text-yellow-600 font-medium hover:underline"
@@ -191,10 +213,10 @@ export default function EventsPage() {
         </div>
       )}
 
-      {/* 🔹 モーダル（作成＆編集） */}
+      {/* モーダル */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative animate-fadeIn">
             <h2 className="text-2xl font-bold mb-4 text-center">
               {editing ? "✏️ イベント編集" : "＋ イベント作成"}
             </h2>
@@ -210,8 +232,19 @@ export default function EventsPage() {
                 name="folderId"
                 value={form.folderId}
                 onChange={handleChange}
-                required
               />
+
+              {/* Driveフォルダリンク */}
+              {form.folderId && (
+                <a
+                  href={`https://drive.google.com/drive/folders/${form.folderId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-blue-600 text-sm hover:underline text-center"
+                >
+                  📂 Driveフォルダを開く
+                </a>
+              )}
 
               <div className="flex justify-end gap-3 mt-4">
                 <button
