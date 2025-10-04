@@ -15,7 +15,9 @@ interface Event {
 }
 
 export default function EventDetailPage() {
-  const { id } = useParams();
+  // ✅ useParams を型キャスト
+  const { id } = useParams() as { id: string };
+
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
