@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { data: session } = useSession() ?? {};
 
   if (!session) {
     return (
