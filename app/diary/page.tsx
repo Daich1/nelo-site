@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
