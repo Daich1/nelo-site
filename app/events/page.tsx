@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 
 interface Event {
   id: string;
@@ -16,13 +15,13 @@ interface Event {
 export default function EventsListPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const { data: session } = useSession();
 
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch("/api/events/list");
         const data = await res.json();
+        console.log("events/list response:", data); // ✅ デバッグ
         setEvents(data.events || []);
       } catch (e) {
         console.error(e);
@@ -35,20 +34,11 @@ export default function EventsListPage() {
 
   if (loading) return <p>読み込み中...</p>;
 
+  if (events.length === 0) return <p>イベントがありません。</p>;
+
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">イベント一覧</h1>
-        {session?.user?.role === "Admin" && (
-          <Link
-            href="/events/create"
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            イベント作成
-          </Link>
-        )}
-      </div>
-
+      <h1 className="text-2xl font-bold mb-4">イベント一覧</h1>
       <div className="grid gap-4">
         {events.map(ev => (
           <Link key={ev.id} href={`/events/${ev.id}`}>

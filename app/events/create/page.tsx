@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminGuard from "@/components/AdminGuard";
 
 export default function EventCreatePage() {
@@ -11,6 +12,7 @@ export default function EventCreatePage() {
     description: "",
   });
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const onChange = (k: keyof typeof form, v: string) => setForm({ ...form, [k]: v });
 
@@ -28,7 +30,10 @@ export default function EventCreatePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "failed");
+
+      // ✅ 成功したら一覧に戻る
       alert(`作成しました！（ID: ${data.id}）`);
+      router.push("/events");
     } catch (e: any) {
       alert("エラー: " + e.message);
     } finally {
