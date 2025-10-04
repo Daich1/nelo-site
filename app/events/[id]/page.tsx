@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";   // ✅ 追加
 import Link from "next/link";
+import Image from "next/image";
 
 interface Event {
   id: string;
@@ -15,22 +16,25 @@ interface Event {
 }
 
 export default function EventDetailPage() {
-  // ✅ useParams を型キャスト
   const { id } = useParams() as { id: string };
-
   const [event, setEvent] = useState<Event | null>(null);
+  const [photos, setPhotos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { data: session } = useSession();
+  const { data: session } = useSession(); // ✅ useSession を利用
   const router = useRouter();
 
   useEffect(() => {
     async function load() {
       try {
+        // イベント詳細取得
         const res = await fetch(`/api/events/${id}`);
         const data = await res.json();
-        if (res.ok) {
-          setEvent(data.event);
-        }
+        if (res.ok) setEvent(data.event);
+
+        // アルバム写真取得
+        const resPhotos = await fetch(`/api/events/${id}/photos`);
+        const dataPhotos = await resPhotos.json();
+        if (resPhotos.ok) setPhotos(dataPhotos.photos);
       } catch (e) {
         console.error(e);
       } finally {
@@ -62,23 +66,41 @@ export default function EventDetailPage() {
 
   return (
     <div className="p-6">
+      {/* イベント情報 */}
       <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
-      <p className="text-gray-600 mb-4">{event.date} @ {event.location}</p>
+      <p className="text-gray-600 mb-4">
+        {event.date} @ {event.location}
+      </p>
       <p className="text-blue-600 mb-6">{event.type}</p>
       <p className="whitespace-pre-line">{event.description}</p>
 
-      {event.folderId && (
-        <a
-          href={`https://drive.google.com/drive/folders/${event.folderId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-4 text-blue-600 underline"
-        >
-          📸 アルバムを見る
-        </a>
+      {/* アルバム表示 */}
+      {photos.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-3">📸 アルバム</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {photos.map((p) => (
+              <a
+                key={p.id}
+                href={p.webViewLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Image
+                  src={p.thumbnailLink}
+                  alt={p.name}
+                  width={200}
+                  height={200}
+                  className="rounded shadow"
+                />
+              </a>
+            ))}
+          </div>
+        </div>
       )}
 
-      {session?.user?.role === "Admin" && (
+      {/* Admin 専用ボタン */}
+      {session?.user && (session.user as any).role === "Admin" && (
         <div className="mt-6 flex gap-3">
           <Link
             href={`/events/${event.id}/edit`}
