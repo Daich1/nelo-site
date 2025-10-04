@@ -1,11 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ❌ これがあると next-auth が動かないので削除
-  // output: "export",
-  reactStrictMode: true,
+  output: "standalone", // ✅ SSGではなくSSRを使う
   experimental: {
-    serverActions: true,
+    serverActions: undefined, // ⚠ booleanではなく削除またはundefined
   },
+  images: {
+    domains: [
+      "lh3.googleusercontent.com",
+      "drive.google.com",
+      "images.unsplash.com",
+      "cdn.discordapp.com",
+    ],
+  },
+  // ✅ デフォルトで静的生成を無効にする
+  generateStaticParams: false,
 };
 
-module.exports = nextConfig;
+export default nextConfig;
