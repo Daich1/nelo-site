@@ -2,11 +2,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-// ✅ useParams() に型を付与
-type Params = { id: string };
-
 export default function EventEditPage() {
-  const { id } = useParams<Params>();  // ← ここで型指定
+  // ✅ useParams() を型キャストして利用
+  const { id } = useParams() as { id: string };
+
   const [form, setForm] = useState({
     title: "",
     date: "",
