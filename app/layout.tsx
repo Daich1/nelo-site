@@ -1,10 +1,9 @@
-"use client";
 export const dynamic = "force-dynamic";
 
 import "./globals.css";
 import Link from "next/link";
-import { SessionProvider } from "next-auth/react";
 import { Noto_Sans_JP } from "next/font/google";
+import { Providers } from "./providers";
 
 const noto = Noto_Sans_JP({ subsets: ["latin"] });
 
@@ -23,8 +22,8 @@ export default function RootLayout({
       <body
         className={`${noto.className} bg-gradient-to-br from-[#001f3f] via-[#002f6c] to-[#000814] text-white min-h-screen`}
       >
-        {/* 🩵 NextAuthのSessionを全ページで有効にする */}
-        <SessionProvider>
+        {/* 🩵 SessionProviderをサーバー側で分離したProvidersに移動 */}
+        <Providers>
           <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/10 border-b border-white/10">
             <nav className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
               <Link
@@ -50,7 +49,7 @@ export default function RootLayout({
           <footer className="text-center text-sm text-gray-400 py-6 border-t border-white/10 mt-12">
             © 2025 Nelo Portal. All rights reserved.
           </footer>
-        </SessionProvider>
+        </Providers>
       </body>
     </html>
   );
