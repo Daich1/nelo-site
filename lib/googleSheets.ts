@@ -1,6 +1,10 @@
 import { google } from "googleapis";
 
-const SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"];
+const SCOPES = [
+  "https://www.googleapis.com/auth/spreadsheets",
+  "https://www.googleapis.com/auth/drive",
+];
+
 export const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID as string;
 
 export async function getSheetsClient() {
