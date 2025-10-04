@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import "./globals.css";
 import Link from "next/link";
 import { Noto_Sans_JP } from "next/font/google";
