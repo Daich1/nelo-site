@@ -6,6 +6,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const { id } = params;
 
+    // Drive認証
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     });
     const drive = google.drive({ version: "v3", auth });
 
+    // フォルダ作成
     const folder = await drive.files.create({
       requestBody: { name: `Album_${id}`, mimeType: "application/vnd.google-apps.folder" },
       fields: "id",
@@ -23,14 +25,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const folderId = folder.data.id;
     if (!folderId) throw new Error("フォルダ作成失敗");
 
-    // シート更新
+    // Sheets更新
     const sheets = await getSheetsClient();
     const rows = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: "Events!A2:G",
     });
     const values = rows.data.values || [];
-    const index = values.findIndex((r) => r[0] === id);
+    const index = values.findIndex(r => r[0] === id);
     if (index === -1) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const rowNumber = index + 2;
@@ -43,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return NextResponse.json({ folderId });
   } catch (e: any) {
-    console.error(e);
+    console.error("createAlbum error:", e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
