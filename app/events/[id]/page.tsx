@@ -17,10 +17,19 @@ export default async function EventPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="p-8 flex flex-col items-center">
-      <h1 className="text-3xl font-bold mb-6">{event.title}</h1>
-
+      <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
+      <p className="text-gray-500 mb-6">
+        {event.date && <>📅 {event.date}　</>}
+        {event.location && <>📍 {event.location}　</>}
+        {event.type && <>🗂️ {event.type}</>}
+      </p>
+      {event.description && (
+        <p className="text-gray-600 text-center max-w-3xl mb-6 whitespace-pre-wrap">
+          {event.description}
+        </p>
+      )}
       <iframe
-        src={`https://drive.google.com/embeddedfolderview?id=${event.folder_id}#grid`}
+        src={`https://drive.google.com/embeddedfolderview?id=${event.folderId}#grid`}
         className="w-full max-w-5xl h-[80vh] border-0 rounded-xl shadow-lg"
       />
     </div>

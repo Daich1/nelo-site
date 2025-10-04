@@ -1,12 +1,17 @@
-import { createClient } from "@supabase/supabase-js";
-import Link from "next/link";
+"use client";
 
-// 🔹 イベント型定義
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
 type EventData = {
-  id: string;
+  id?: string;
   title: string;
-  folder_id: string;
-  created_at: string;
+  date: string;
+  location: string;
+  type: string;
+  description: string;
+  folderId: string;
+  created_at?: string;
 };
 
 // 🔹 Supabaseクライアント
@@ -15,70 +20,274 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default async function EventsPage() {
-  // Supabaseからデータ取得
-  const { data: events, error } = await supabase
-    .from("events")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default function EventsPage() {
+  const [events, setEvents] = useState<EventData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editing, setEditing] = useState<EventData | null>(null);
+  const [form, setForm] = useState<EventData>({
+    title: "",
+    date: "",
+    location: "",
+    type: "",
+    description: "",
+    folderId: "",
+  });
 
-  // エラーハンドリング
-  if (error) {
-    console.error("Supabase取得エラー:", error);
-    return (
-      <div className="text-center text-red-600 mt-20">
-        取得中にエラーが発生しました。
-      </div>
-    );
-  }
+  // 🔹 データ取得
+  const fetchEvents = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) console.error(error);
+    else setEvents(data || []);
+    setLoading(false);
+  };
 
-  // データがない場合
-  if (!events || events.length === 0) {
-    return (
-      <div className="p-8 max-w-5xl mx-auto text-center">
-        <h1 className="text-3xl font-bold mb-8">イベント一覧</h1>
-        <p className="text-gray-500 mb-8">まだイベントが登録されていません。</p>
-        <Link
-          href="/events/create"
-          className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
-        >
-          ＋ イベントを作成
-        </Link>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
-  // 正常表示
+  // 🔹 モーダル開閉
+  const openCreateModal = () => {
+    setEditing(null);
+    setForm({
+      title: "",
+      date: "",
+      location: "",
+      type: "",
+      description: "",
+      folderId: "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (event: EventData) => {
+    setEditing(event);
+    setForm({
+      title: event.title || "",
+      date: event.date || "",
+      location: event.location || "",
+      type: event.type || "",
+      description: event.description || "",
+      folderId: event.folderId || "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditing(null);
+  };
+
+  // 🔹 フォーム入力変更
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // 🔹 作成 or 更新
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (editing) {
+      // 更新
+      const { error } = await supabase
+        .from("events")
+        .update({
+          title: form.title,
+          date: form.date,
+          location: form.location,
+          type: form.type,
+          description: form.description,
+          folderId: form.folderId,
+        })
+        .eq("id", editing.id);
+      if (error) alert("更新失敗: " + error.message);
+    } else {
+      // 新規作成
+      const { error } = await supabase.from("events").insert([
+        {
+          title: form.title,
+          date: form.date,
+          location: form.location,
+          type: form.type,
+          description: form.description,
+          folderId: form.folderId,
+        },
+      ]);
+      if (error) alert("作成失敗: " + error.message);
+    }
+
+    closeModal();
+    fetchEvents();
+  };
+
+  // 🔹 削除
+  const handleDelete = async (id: string) => {
+    if (!confirm("本当に削除しますか？")) return;
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    if (error) alert("削除失敗: " + error.message);
+    else fetchEvents();
+  };
+
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8 text-center">イベント一覧</h1>
+    <div className="p-8 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8 text-center">イベント管理</h1>
 
-      {/* 🔹 イベントカード一覧 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {events.map((event: EventData) => (
-          <Link
-            key={event.id}
-            href={`/events/${event.id}`}
-            className="block border border-gray-300 rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transition p-4 bg-white/90"
-          >
-            <h2 className="text-xl font-semibold mb-2">{event.title}</h2>
-            <p className="text-sm text-gray-500">
-              作成日: {new Date(event.created_at).toLocaleString("ja-JP")}
-            </p>
-            <div className="mt-3 text-blue-600 font-medium">▶ アルバムを見る</div>
-          </Link>
-        ))}
-      </div>
-
-      {/* 🔹 イベント作成リンク */}
-      <div className="text-center mt-10">
-        <Link
-          href="/events/create"
-          className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+      {/* 追加ボタン */}
+      <div className="text-right mb-6">
+        <button
+          onClick={openCreateModal}
+          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
         >
           ＋ イベントを作成
-        </Link>
+        </button>
       </div>
+
+      {/* イベント一覧 */}
+      {loading ? (
+        <p className="text-center text-gray-500">読み込み中...</p>
+      ) : events.length === 0 ? (
+        <p className="text-center text-gray-500">まだイベントがありません。</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {events.map((event) => (
+            <div
+              key={event.id}
+              className="border border-gray-300 rounded-xl shadow hover:shadow-lg transition p-4 bg-white/90"
+            >
+              <h2 className="text-xl font-semibold mb-2">{event.title}</h2>
+              {event.date && <p className="text-gray-500">📅 {event.date}</p>}
+              {event.location && <p className="text-gray-500">📍 {event.location}</p>}
+              {event.type && <p className="text-gray-500">🗂️ {event.type}</p>}
+              {event.description && (
+                <p className="text-gray-600 mt-2 line-clamp-2">{event.description}</p>
+              )}
+
+              <div className="mt-3 flex gap-3">
+                <a
+                  href={`/events/${event.id}`}
+                  className="text-blue-600 font-medium hover:underline"
+                >
+                  ▶ アルバムを見る
+                </a>
+                <button
+                  onClick={() => openEditModal(event)}
+                  className="text-yellow-600 font-medium hover:underline"
+                >
+                  ✏️ 編集
+                </button>
+                <button
+                  onClick={() => handleDelete(event.id!)}
+                  className="text-red-600 font-medium hover:underline"
+                >
+                  🗑️ 削除
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 🔹 モーダル（作成＆編集） */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative">
+            <h2 className="text-2xl font-bold mb-4 text-center">
+              {editing ? "✏️ イベント編集" : "＋ イベント作成"}
+            </h2>
+
+            <form onSubmit={handleSave} className="space-y-3">
+              <Input label="タイトル" name="title" value={form.title} onChange={handleChange} required />
+              <Input label="日付" name="date" type="date" value={form.date} onChange={handleChange} />
+              <Input label="場所" name="location" value={form.location} onChange={handleChange} />
+              <Input label="種別" name="type" value={form.type} onChange={handleChange} />
+              <Textarea label="説明" name="description" value={form.description} onChange={handleChange} />
+              <Input
+                label="Google Drive フォルダID"
+                name="folderId"
+                value={form.folderId}
+                onChange={handleChange}
+                required
+              />
+
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  {editing ? "更新" : "作成"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 共通部品
+function Input({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  type?: string;
+  required?: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <div>
+      <label className="block mb-1 font-medium">{label}</label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="w-full p-2 border rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+  );
+}
+
+function Textarea({
+  label,
+  name,
+  value,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+}) {
+  return (
+    <div>
+      <label className="block mb-1 font-medium">{label}</label>
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        rows={3}
+        className="w-full p-2 border rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
     </div>
   );
 }
