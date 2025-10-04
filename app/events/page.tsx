@@ -1,42 +1,65 @@
 "use client";
-
-import useSWR from "swr";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+interface Event {
+  id: string;
+  title: string;
+  date: string;
+  location: string;
+  type: string;
+  description: string;
+  folderId: string;
+}
 
-export default function EventsPage() {
-  const { data: session, status } = useSession();
-  const { data, error, isLoading } = useSWR("/api/events/list", fetcher);
+export default function EventsListPage() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
 
-  if (status === "loading") return <p>読み込み中...</p>;
-  if (!session) redirect("/signin");
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/events/list");
+        const data = await res.json();
+        setEvents(data.events || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
 
-  if (isLoading) return <div>イベントを読み込み中...</div>;
-  if (error) return <div>エラーが発生しました</div>;
+  if (loading) return <p>読み込み中...</p>;
 
   return (
-    <div className="p-12">
-      <h1 className="text-3xl font-bold mb-6">イベント一覧</h1>
-      <ul className="space-y-4">
-        {data?.events?.map((e: any) => (
-          <li key={e.id} className="p-4 rounded-lg bg-gray-800 hover:bg-gray-700">
-            <Link href={`/events/${e.id}`}>
-              <p className="text-xl">{e.title}</p>
-              <p className="text-sm text-gray-400">{e.date}</p>
-            </Link>
-          </li>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">イベント一覧</h1>
+        {session?.user?.role === "Admin" && (
+          <Link
+            href="/events/create"
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            イベント作成
+          </Link>
+        )}
+      </div>
+
+      <div className="grid gap-4">
+        {events.map(ev => (
+          <Link key={ev.id} href={`/events/${ev.id}`}>
+            <div className="border rounded-lg p-4 shadow bg-white/80 hover:bg-gray-100 cursor-pointer">
+              <h2 className="font-bold text-lg">{ev.title}</h2>
+              <p className="text-sm text-gray-600">{ev.date} @ {ev.location}</p>
+              <p className="text-sm text-blue-600">{ev.type}</p>
+              <p className="mt-2 text-gray-800 line-clamp-2">{ev.description}</p>
+            </div>
+          </Link>
         ))}
-      </ul>
-      <div className="mt-6">
-        <Link
-          href="/events/create"
-          className="px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-500"
-        >
-          + イベント作成
-        </Link>
       </div>
     </div>
   );

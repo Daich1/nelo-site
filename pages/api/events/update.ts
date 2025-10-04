@@ -7,45 +7,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const sheets = await getSheetsClient();
+    const { id, title, date, location, type, description, folderId } = req.body;
+    if (!id) return res.status(400).json({ error: "ID is required" });
 
-    // 既存のイベント一覧を取得
-    const range = "Events!A2:G"; // 7列
+    const sheets = await getSheetsClient();
+    const range = "Events!A2:G";
+
     const rows = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range,
     });
 
-    const existing = rows.data.values || [];
-    const nextId = `event${String(existing.length + 1).padStart(3, "0")}`;
+    const values = rows.data.values || [];
+    const index = values.findIndex(r => r[0] === id);
+    if (index === -1) return res.status(404).json({ error: "Event not found" });
 
-    const { title, date, location, type, description } = req.body;
+    // 行番号（1行目ヘッダーなので +2）
+    const rowNumber = index + 2;
 
-    if (!title || !date) {
-      return res.status(400).json({ error: "Title と Date は必須です" });
-    }
-
-    // 新しい行を追加
-    await sheets.spreadsheets.values.append({
+    await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: "Events!A2:G",
+      range: `Events!A${rowNumber}:G${rowNumber}`,
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [[
-          nextId,
+          id,
           title,
           date,
           location || "",
           type || "",
           description || "",
-          "" // folderId
+          folderId || ""
         ]],
       },
     });
 
-    return res.status(200).json({ id: nextId });
+    res.status(200).json({ ok: true });
   } catch (e: any) {
     console.error(e);
-    return res.status(500).json({ error: e.message });
+    res.status(500).json({ error: e.message });
   }
 }

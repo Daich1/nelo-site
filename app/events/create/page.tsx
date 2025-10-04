@@ -6,10 +6,9 @@ export default function EventCreatePage() {
   const [form, setForm] = useState({
     title: "",
     date: "",
-    description: "",
     location: "",
     type: "",
-    summary: "",
+    description: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -64,12 +63,6 @@ export default function EventCreatePage() {
           placeholder="Type"
           value={form.type}
           onChange={e => onChange("type", e.target.value)}
-        />
-        <input
-          className="border p-2 rounded"
-          placeholder="Summary"
-          value={form.summary}
-          onChange={e => onChange("summary", e.target.value)}
         />
         <textarea
           className="border p-2 rounded min-h-[120px]"

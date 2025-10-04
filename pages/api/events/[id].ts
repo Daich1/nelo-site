@@ -5,28 +5,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { id } = req.query;
     if (!id || typeof id !== "string") {
-      return res.status(400).json({ error: "Invalid event id" });
+      return res.status(400).json({ error: "Invalid ID" });
     }
 
     const sheets = await getSheetsClient();
-    const response = await sheets.spreadsheets.values.get({
+    const range = "Events!A2:G";
+
+    const rows = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: "Events!A2:D", // A:ID, B:Title, C:Date, D:Description
+      range,
     });
 
-    const rows = response.data.values || [];
-    const event = rows.find((r) => r[0] === id);
+    const found = (rows.data.values || []).find(r => r[0] === id);
 
-    if (!event) {
+    if (!found) {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    res.status(200).json({
-      id: event[0],
-      title: event[1],
-      date: event[2],
-      description: event[3],
-    });
+    const event = {
+      id: found[0],
+      title: found[1],
+      date: found[2],
+      location: found[3],
+      type: found[4],
+      description: found[5],
+      folderId: found[6],
+    };
+
+    res.status(200).json({ event });
   } catch (e: any) {
     console.error(e);
     res.status(500).json({ error: e.message });
